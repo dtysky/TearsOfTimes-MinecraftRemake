@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Minecraft.Laucher
+namespace Minecraft.Launcher
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -23,6 +23,46 @@ namespace Minecraft.Laucher
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Drag(object sender, MouseButtonEventArgs e)
+        {
+            this.DragMove();
+        }
+
+        private void Button_Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Button_Min_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
+        }
+
+        private void Button_Launch_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_Settings_Click(object sender, RoutedEventArgs e)
+        {
+            if (Settings_Form.Visibility == Visibility.Visible)
+                Settings_Form.Visibility = Visibility.Hidden;
+            else
+                Settings_Form.Visibility = Visibility.Visible;
+        }
+
+        private void CheckBox_Log_Checked(object sender, RoutedEventArgs e)
+        {
+            Scroller.Visibility = Visibility.Visible;
+            InputBlock.Visibility = Visibility.Visible;
+        }
+
+        private void CheckBox_Log_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Scroller.Visibility = Visibility.Hidden;
+            InputBlock.Visibility = Visibility.Hidden;
         }
     }
 }
