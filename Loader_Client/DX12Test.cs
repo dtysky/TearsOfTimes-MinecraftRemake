@@ -9,7 +9,7 @@ using SharpDX.Direct3D;
 using SharpDX.DXGI;
 using SharpDX.Windows;
 
-namespace Minecraft.Loader.Client
+namespace Minecraft.Loader
 {
     using SharpDX.Direct3D12;
     using System.Diagnostics;
