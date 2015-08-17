@@ -82,6 +82,7 @@ namespace Minecraft.Loader.Client
         /// </summary>
         public void Update()
         {
+            Console.WriteLine("Update frame " + clock.Elapsed.TotalMilliseconds.ToString() + "ms");
         }
 
         /// <summary>

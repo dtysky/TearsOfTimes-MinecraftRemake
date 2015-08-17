@@ -16,9 +16,8 @@ using System.Windows.Shapes;
 
 namespace Minecraft.Launcher
 {
-    /// <summary>
-    /// MainWindow.xaml 的交互逻辑
-    /// </summary>
+    using Minecraft.Common.Helper;
+
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -29,7 +28,7 @@ namespace Minecraft.Launcher
 
         private void Initialize()
         {
-            Helper.Logger Log = Helper.Logger.Instance;
+            Logger Log = Logger.Instance;
             Console.SetOut(Log);
             DataContext = Log.Content;
             Loaded += new RoutedEventHandler(delegate (object sender, RoutedEventArgs e)
@@ -43,7 +42,7 @@ namespace Minecraft.Launcher
                         InputBlock.Focus();
                     }
                 });
-                Log.Updated += new Helper.Logger.UpdatedEventHandler(delegate (string value)
+                Log.Updated += new Logger.UpdatedEventHandler(delegate (string value)
                 {
                     Scroller.ScrollToBottom();
                     if (Log.Content.Output.Count > 500)
@@ -67,12 +66,6 @@ namespace Minecraft.Launcher
             this.WindowState = WindowState.Minimized;
         }
 
-        private void Button_Launch_Click(object sender, RoutedEventArgs e)
-        {
-            Console.WriteLine("test");
-            Loader.Client.DX12Test.Run();
-        }
-
         private void Button_Settings_Click(object sender, RoutedEventArgs e)
         {
             if (Settings_Form.Visibility == Visibility.Visible)
@@ -85,14 +78,19 @@ namespace Minecraft.Launcher
         {
             Scroller.Visibility = Visibility.Visible;
             InputBlock.Visibility = Visibility.Visible;
-            Helper.Logger.Instance.Enable = true;
+            Logger.Instance.Enable = true;
         }
 
         private void CheckBox_Log_Unchecked(object sender, RoutedEventArgs e)
         {
             Scroller.Visibility = Visibility.Hidden;
             InputBlock.Visibility = Visibility.Hidden;
-            Helper.Logger.Instance.Enable = false;
+            Logger.Instance.Enable = false;
+        }
+
+        private void Button_Launch_Click(object sender, RoutedEventArgs e)
+        {
+            Loader.Client.DX12Test.Run();
         }
     }
 }

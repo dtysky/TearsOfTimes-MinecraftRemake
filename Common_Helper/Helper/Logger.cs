@@ -3,9 +3,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 
-namespace Minecraft.Helper
+namespace Minecraft.Common.Helper
 {
-    class Logger : TextWriter
+    public class Logger : TextWriter
     {
         public static Logger Instance = new Logger();
         public Logger_Content Content = new Logger_Content();
@@ -14,7 +14,7 @@ namespace Minecraft.Helper
 
         private Logger()
         {
-         
+
         }
 
         public override void WriteLine(string Value)
@@ -42,10 +42,10 @@ namespace Minecraft.Helper
         public delegate void ExecuteCommandEventHandler(string Value);
 
         public event ExecuteCommandEventHandler ExecuteCommand = delegate { };
-           
+
     }
 
-    class Logger_Content : INotifyPropertyChanged
+    public class Logger_Content : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -83,8 +83,8 @@ namespace Minecraft.Helper
             }
         }
 
-        
 
-        
+
+
     }
 }
