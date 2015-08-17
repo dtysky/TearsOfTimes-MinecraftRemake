@@ -7,7 +7,7 @@
     <ProjectGuid>{FB768BBE-B1EC-4084-A18B-C8B4C7031A78}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Launcher_Client</RootNamespace>
+    <RootNamespace>Minecraft.Launcher</RootNamespace>
     <AssemblyName>Launcher_Client</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -107,7 +107,23 @@
     <Resource Include="Image\Icon.ico" />
     <Resource Include="Image\Launcher.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common_Helper\Common_Helper.csproj">
+      <Project>{820efc45-2f20-4fae-8aa2-46927659785c}</Project>
+      <Name>Common_Helper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Loader_Client\Loader_Client.csproj">
+      <Project>{fec70bb8-b4c6-4042-bacc-0d7c884852b6}</Project>
+      <Name>Loader_Client</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>del $(TargetDir)*.xml
+del $(TargetDir)SharpDX*.pdb
+md $(TargetDir)libs
+move $(TargetDir)*.dll $(TargetDir)libs\</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

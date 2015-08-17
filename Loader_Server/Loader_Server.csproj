@@ -7,7 +7,7 @@
     <ProjectGuid>{A19ABB86-9F54-44E5-A1F3-C0EA4766C0E1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Loader_Server</RootNamespace>
+    <RootNamespace>Minecraft.Loader.Server</RootNamespace>
     <AssemblyName>Loader_Server</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

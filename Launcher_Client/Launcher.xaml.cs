@@ -70,6 +70,7 @@ namespace Minecraft.Launcher
         private void Button_Launch_Click(object sender, RoutedEventArgs e)
         {
             Console.WriteLine("test");
+            Loader.Client.DX12Test.Run();
         }
 
         private void Button_Settings_Click(object sender, RoutedEventArgs e)
