@@ -46,7 +46,7 @@ namespace Minecraft.Launcher
                 Log.Updated += new Helper.Logger.UpdatedEventHandler(delegate (string value)
                 {
                     Scroller.ScrollToBottom();
-                    if (Log.Content.Output.Count > 5)
+                    if (Log.Content.Output.Count > 500)
                         Log.Content.Output.RemoveAt(0);
                 });
             }); 

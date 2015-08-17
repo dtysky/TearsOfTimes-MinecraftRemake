@@ -30,6 +30,38 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SharpDX, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.D3DCompiler, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.D3DCompiler.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Desktop, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.Desktop.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D12, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.Direct3D12.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DirectInput, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.DirectInput.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DirectSound, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.DirectSound.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Minecraft_Remake\Minecraft_Remake\libs\Dx12\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,8 +72,39 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Loader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common_Helper\Common_Helper.csproj">
+      <Project>{820efc45-2f20-4fae-8aa2-46927659785c}</Project>
+      <Name>Common_Helper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Libs\SharpDX.Animation.dll" />
+    <Content Include="Libs\SharpDX.D3DCompiler.dll" />
+    <Content Include="Libs\SharpDX.Desktop.dll" />
+    <Content Include="Libs\SharpDX.Direct2D1.dll" />
+    <Content Include="Libs\SharpDX.Direct3D11.dll" />
+    <Content Include="Libs\SharpDX.Direct3D11.Effects.dll" />
+    <Content Include="Libs\SharpDX.Direct3D12.dll" />
+    <Content Include="Libs\SharpDX.Direct3D9.dll" />
+    <Content Include="Libs\SharpDX.DirectComposition.dll" />
+    <Content Include="Libs\SharpDX.DirectInput.dll" />
+    <Content Include="Libs\SharpDX.DirectManipulation.dll" />
+    <Content Include="Libs\SharpDX.DirectSound.dll" />
+    <Content Include="Libs\SharpDX.dll" />
+    <Content Include="Libs\SharpDX.DXGI.dll" />
+    <Content Include="Libs\SharpDX.Mathematics.dll" />
+    <Content Include="Libs\SharpDX.MediaFoundation.dll" />
+    <Content Include="Libs\SharpDX.RawInput.dll" />
+    <Content Include="Libs\SharpDX.XAudio2.dll" />
+    <Content Include="Libs\SharpDX.XInput.dll" />
+    <Content Include="Libs\sharpdx_direct3d11_1_effects_arm.dll" />
+    <Content Include="Libs\sharpdx_direct3d11_1_effects_x64.dll" />
+    <Content Include="Libs\sharpdx_direct3d11_1_effects_x86.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

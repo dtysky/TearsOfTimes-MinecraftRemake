@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpDX.Windows;
 
-namespace Common_Helper
+namespace Minecraft.Loader.Client
 {
-    public class Class1
+    using Minecraft.Common;
+    public class Loader
     {
+        
     }
 }
