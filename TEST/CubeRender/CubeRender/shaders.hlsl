@@ -6,16 +6,16 @@ struct PSInput
 
 cbuffer ConstantBufferData : register(b0)
 {
-	float4 offset;
-	PSInput cube[8];
+	float4 position_offset;
+	float4 color_offset;
 };
 
 PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
 	PSInput result;
-	
-	result.position = position + cube[0].position;
-	result.color = color + cube[0].color;
+
+	result.position = position+ position_offset;
+	result.color = color + color_offset;
 
 	return result;
 }

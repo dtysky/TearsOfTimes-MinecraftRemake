@@ -19,10 +19,10 @@ namespace CubeRender
 
         struct ConstantBufferData
         {
-            public Vector4 Offset;
-            public Vertex[] Cube;
+            public Vector4 Position_Offset;
+            public Vector4 Color_Offset;
         };
-        
+
 
         const int FrameCount = 2;
 
@@ -47,7 +47,7 @@ namespace CubeRender
         Resource constantBuffer;
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
-        
+
 
         //Synchronization objetcs.
         private int frameIndex;
@@ -61,7 +61,7 @@ namespace CubeRender
             LoadPipeline(form);
             LoadAssets();
         }
-    
+
         private void LoadPipeline(RenderForm form)
         {
             int width = form.ClientSize.Width;
@@ -76,7 +76,7 @@ namespace CubeRender
 
             device = new Device(null, SharpDX.Direct3D.FeatureLevel.Level_11_0);
 
-            using(var factory = new Factory4())
+            using (var factory = new Factory4())
             {
                 var queueDesc = new CommandQueueDescription(CommandListType.Direct);
                 commandQueue = device.CreateCommandQueue(queueDesc);
@@ -183,7 +183,7 @@ namespace CubeRender
             psoDesc.RenderTargetFormats[0] = SharpDX.DXGI.Format.R8G8B8A8_UNorm;
 
             pipelineState = device.CreateGraphicsPipelineState(psoDesc);
-            
+
             commandList = device.CreateCommandList(CommandListType.Direct, commandAllocator, pipelineState);
 
             float aspectRatio = viewport.Width / viewport.Height;
@@ -230,20 +230,8 @@ namespace CubeRender
 
             constantBufferData = new ConstantBufferData
             {
-                Offset = new Vector4(0f, 0f, 0f, 0f),
-                Cube = new Vertex[]
-                {
-                    new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(-0.23f, 0.5f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(0.02f, 0.8f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(0.5f, -0.1f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(0.23f, -0.5f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(-0.5f, 0.1f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                    new Vertex{Position = new Vector3(0.8f, 0.2f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)}
-                }
+                Position_Offset = new Vector4(0f, 0f, 0f, 0f),
+                Color_Offset = new Vector4(0f, 0f, 0f, 0f)
             };
 
             constantBufferPointer = constantBuffer.Map(0);
@@ -308,6 +296,21 @@ namespace CubeRender
             //constantBufferData.Offset.X = 0.3f;
             //constantBufferData.Offset.X = 0.7f;
 
+            if (constantBufferData.Position_Offset.X >= 1.0f)
+                constantBufferData.Position_Offset.X = -1.0f;
+            else
+                constantBufferData.Position_Offset.X += 0.05f;
+
+            if (constantBufferData.Position_Offset.Y >= 1.0f)
+                constantBufferData.Position_Offset.Y = -1.0f;
+            else
+                constantBufferData.Position_Offset.Y += 0.05f;
+
+            if (constantBufferData.Color_Offset.X >= 1.0f)
+                constantBufferData.Color_Offset.X = -1.0f;
+            else
+                constantBufferData.Color_Offset.X += 0.05f;
+
             Utilities.Write(constantBufferPointer, ref constantBufferData);
 
         }
@@ -341,3 +344,4 @@ namespace CubeRender
         }
     }
 }
+
