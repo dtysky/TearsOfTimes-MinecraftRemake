@@ -6,16 +6,15 @@ struct PSInput
 
 cbuffer ConstantBufferData : register(b0)
 {
-	float4 position_offset;
-	float4 color_offset;
+	float4x4 project;
 };
 
 PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
-	PSInput result;
+	PSInput result = (PSInput)0;
 
-	result.position = position+ position_offset;
-	result.color = color + color_offset;
+	result.position = mul(project, position);
+	result.color = color;
 
 	return result;
 }

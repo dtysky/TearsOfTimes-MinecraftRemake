@@ -11,16 +11,16 @@ namespace CubeRender
 
     public class CubeRender : IDisposable
     {
+        private Viewer Player = new Viewer();
         struct Vertex
         {
             public Vector3 Position;
-            public Vector4 Color;
+            public Vector3 Color;
         };
 
         struct ConstantBufferData
         {
-            public Vector4 Position_Offset;
-            public Vector4 Color_Offset;
+            public Matrix Project;
         };
 
 
@@ -43,7 +43,10 @@ namespace CubeRender
 
         //App resources
         Resource vertexBuffer;
+        Resource indexBuffer;
+        Resource depthBuffer;
         VertexBufferView vertexBufferView;
+        IndexBufferView indexBufferView;
         Resource constantBuffer;
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
@@ -56,11 +59,19 @@ namespace CubeRender
         private Fence fence;
         private int fenceValue;
 
+        Matrix World = Matrix.Identity;
+        Matrix Project = Matrix.Identity;
+        Matrix View = Matrix.Identity;
+        private CpuDescriptorHandle handleDSV;
+
+        private int Count = 0;
+
         public void Initialize(RenderForm form)
         {
             LoadPipeline(form);
             LoadAssets();
         }
+
 
         private void LoadPipeline(RenderForm form)
         {
@@ -172,7 +183,7 @@ namespace CubeRender
                 RasterizerState = RasterizerStateDescription.Default(),
                 BlendState = BlendStateDescription.Default(),
                 DepthStencilFormat = SharpDX.DXGI.Format.D32_Float,
-                DepthStencilState = new DepthStencilStateDescription() { IsDepthEnabled = false, IsStencilEnabled = false },
+                DepthStencilState = new DepthStencilStateDescription() { IsDepthEnabled = true, DepthComparison = Comparison.LessEqual, DepthWriteMask = DepthWriteMask.All },
                 SampleMask = int.MaxValue,
                 PrimitiveTopologyType = PrimitiveTopologyType.Triangle,
                 RenderTargetCount = 1,
@@ -185,24 +196,19 @@ namespace CubeRender
             pipelineState = device.CreateGraphicsPipelineState(psoDesc);
 
             commandList = device.CreateCommandList(CommandListType.Direct, commandAllocator, pipelineState);
+            commandList.Close();
 
-            float aspectRatio = viewport.Width / viewport.Height;
-
+            // build vertex buffer
             var triangleVertices = new[]
             {
-                new Vertex() {Position=new Vector3(0.0f, 0.1f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f ) },
-                new Vertex() {Position=new Vector3(0.0f, -0.1f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
-                new Vertex() {Position=new Vector3(-0.1f, 0.01f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f )}
-                //new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(-0.23f, 0.5f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(0.02f, 0.8f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(0.5f, -0.1f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(0.23f, -0.5f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(-0.5f, 0.1f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
-                //new Vertex{Position = new Vector3(0.8f, 0.2f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)}
+                new Vertex() {Position=new Vector3(-1.0f, -1.0f, -1.0f),Color=new Vector3(0.0f, 0.0f, 0.0f)},
+                new Vertex() {Position=new Vector3(-1.0f, -1.0f,  1.0f),Color=new Vector3(0.0f, 0.0f, 1.0f)},
+                new Vertex() {Position=new Vector3(-1.0f,  1.0f, -1.0f),Color=new Vector3(0.0f, 1.0f, 0.0f)},
+                new Vertex() {Position=new Vector3(-1.0f,  1.0f,  1.0f),Color=new Vector3(0.0f, 1.0f, 1.0f)},
+                new Vertex() {Position=new Vector3( 1.0f, -1.0f, -1.0f),Color=new Vector3(1.0f, 0.0f, 0.0f)},
+                new Vertex() {Position=new Vector3( 1.0f, -1.0f,  1.0f),Color=new Vector3(1.0f, 0.0f, 1.0f)},
+                new Vertex() {Position=new Vector3( 1.0f,  1.0f, -1.0f),Color=new Vector3(1.0f, 1.0f, 0.0f)},
+                new Vertex() {Position=new Vector3( 1.0f,  1.0f,  1.0f),Color=new Vector3(1.0f, 1.0f, 1.0f)}
             };
 
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -217,7 +223,42 @@ namespace CubeRender
             vertexBufferView.StrideInBytes = Utilities.SizeOf<Vertex>();
             vertexBufferView.SizeInBytes = vertexBufferSize;
 
-            commandList.Close();
+            // build index buffer
+
+            var triangleIndexes = new uint[]
+            {
+                 0,2,1, // -x
+                 1,2,3,
+                 
+                 4,5,6, // +x
+                 5,7,6,
+                 
+                 0,1,5, // -y
+                 0,5,4,
+                 
+                 2,6,7, // +y
+                 2,7,3,
+                 
+                 0,4,6, // -z
+                 0,6,2,
+                 
+                 1,3,7, // +z
+                 1,7,5
+            };
+
+            int indexBufferSize = Utilities.SizeOf(triangleIndexes);
+
+            indexBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(indexBufferSize), ResourceStates.GenericRead);
+            IntPtr pIndexDataBegin = indexBuffer.Map(0);
+            Utilities.Write(pIndexDataBegin, triangleIndexes, 0, triangleIndexes.Length);
+            indexBuffer.Unmap(0);
+
+            indexBufferView = new IndexBufferView();
+            indexBufferView.BufferLocation = indexBuffer.GPUVirtualAddress;
+            indexBufferView.SizeInBytes = indexBufferSize;
+            indexBufferView.Format = Format.R32_UInt;
+
+            // build constant buffer
 
             constantBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
 
@@ -230,18 +271,67 @@ namespace CubeRender
 
             constantBufferData = new ConstantBufferData
             {
-                Position_Offset = new Vector4(0f, 0f, 0f, 0f),
-                Color_Offset = new Vector4(0f, 0f, 0f, 0f)
+                Project = Matrix.Identity
             };
 
             constantBufferPointer = constantBuffer.Map(0);
             Utilities.Write(constantBufferPointer, ref constantBufferData);
+
+            // build depth buffer
+
+            DescriptorHeapDescription descDescriptorHeapDSB = new DescriptorHeapDescription()
+            {
+                DescriptorCount = 1,
+                Type = DescriptorHeapType.DepthStencilView,
+                Flags = DescriptorHeapFlags.None
+            };
+
+            DescriptorHeap descriptorHeapDSB = device.CreateDescriptorHeap(descDescriptorHeapDSB);
+            ResourceDescription descDepth = new ResourceDescription()
+            {
+                Dimension = ResourceDimension.Texture2D,
+                DepthOrArraySize = 1,
+                MipLevels = 0,
+                Flags = ResourceFlags.AllowDepthStencil,
+                Width = (int)viewport.Width,
+                Height = (int)viewport.Height,
+                Format = Format.R32_Typeless,
+                Layout = TextureLayout.Unknown,
+                SampleDescription = new SampleDescription() { Count = 1}
+            };
+
+            ClearValue dsvClearValue = new ClearValue()
+            {
+                Format = Format.D32_Float,
+                DepthStencil = new DepthStencilValue()
+                {
+                    Depth = 1.0f,
+                    Stencil = 0
+                }
+            };
+
+            Resource renderTargetDepth = device.CreateCommittedResource(new HeapProperties(HeapType.Default), HeapFlags.None, descDepth, ResourceStates.GenericRead,dsvClearValue);
+
+            DepthStencilViewDescription depthDSV = new DepthStencilViewDescription()
+            {
+                Dimension = DepthStencilViewDimension.Texture2D,
+                Format = Format.D32_Float,
+                Texture2D = new DepthStencilViewDescription.Texture2DResource()
+                {
+                    MipSlice = 0
+                }
+            };
+
+            device.CreateDepthStencilView(renderTargetDepth, depthDSV, descriptorHeapDSB.CPUDescriptorHandleForHeapStart);
+            handleDSV = descriptorHeapDSB.CPUDescriptorHandleForHeapStart;
 
             fence = device.CreateFence(0, FenceFlags.None);
             fenceValue = 1;
             fenceEvent = new AutoResetEvent(false);
 
         }
+
+        
 
         private void PopulateCommandList()
         {
@@ -258,12 +348,16 @@ namespace CubeRender
             var rtvHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             rtvHandle += frameIndex * rtvDescriptorSize;
 
-            commandList.SetRenderTargets(1, rtvHandle, false, null);
+            
+            commandList.ClearDepthStencilView(handleDSV, ClearFlags.FlagsDepth, 1.0f, 0);
             commandList.ClearRenderTargetView(rtvHandle, new Color4(0, 0.2F, 0.4f, 1), 0, null);
+            commandList.SetRenderTargets(1, rtvHandle, false, handleDSV);
 
-            commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+            commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;        
             commandList.SetVertexBuffer(0, vertexBufferView);
-            commandList.DrawInstanced(3, 1, 0, 0);
+            commandList.SetIndexBuffer(indexBufferView);
+            commandList.DrawIndexedInstanced(36, 1, 0, 0, 0);
+            //commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
@@ -289,30 +383,19 @@ namespace CubeRender
 
         public void Update()
         {
-            //const float translationSpeed = 0.005f;
-            //const float offsetBounds = 1.25f;
+            //Player.SetPosition(new Vector3(0.0f, 0.0f, 0.0f));
+            //Player.SetLens(0.25f * (float)Math.PI, 1.0, 1.0f, 1000.0f);
+            //Player.LookAt(new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f));
+            //Player.UpdateViewMatrix();
+            //constantBufferData.Project = Player.GetProjection();
 
-            //constantBufferData.Cube.Position.X = 0.8f;
-            //constantBufferData.Offset.X = 0.3f;
-            //constantBufferData.Offset.X = 0.7f;
-
-            if (constantBufferData.Position_Offset.X >= 1.0f)
-                constantBufferData.Position_Offset.X = -1.0f;
-            else
-                constantBufferData.Position_Offset.X += 0.05f;
-
-            if (constantBufferData.Position_Offset.Y >= 1.0f)
-                constantBufferData.Position_Offset.Y = -1.0f;
-            else
-                constantBufferData.Position_Offset.Y += 0.05f;
-
-            if (constantBufferData.Color_Offset.X >= 1.0f)
-                constantBufferData.Color_Offset.X = -1.0f;
-            else
-                constantBufferData.Color_Offset.X += 0.05f;
+            View = Matrix.LookAtLH(new Vector3(0.0f,2.0f,-4.5f), new Vector3(0.0f,0.0f,0.0f), new Vector3(0.0f,1.0f,0.0f));
+            Project = Matrix.PerspectiveFovLH(MathUtil.Pi / 3.0f, viewport.Width / viewport.Height, 0.1f, 100.0f);
+            World = Matrix.RotationY(Count * 0.02f);
+            constantBufferData.Project = (World * View) * Project;
 
             Utilities.Write(constantBufferPointer, ref constantBufferData);
-
+            Count++;
         }
 
         public void Render()
