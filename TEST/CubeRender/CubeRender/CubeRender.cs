@@ -7,6 +7,7 @@ namespace CubeRender
     using SharpDX;
     using SharpDX.Direct3D12;
     using SharpDX.Windows;
+    using SharpDX.Mathematics;
 
     public class CubeRender : IDisposable
     {
@@ -15,6 +16,13 @@ namespace CubeRender
             public Vector3 Position;
             public Vector4 Color;
         };
+
+        struct ConstantBufferData
+        {
+            public Vector4[] Cube;
+            public Vector4 Offset;
+        };
+        
 
         const int FrameCount = 2;
 
@@ -28,6 +36,7 @@ namespace CubeRender
         private CommandQueue commandQueue;
         private RootSignature rootSignature;
         private DescriptorHeap renderTargetViewHeap;
+        private DescriptorHeap constantBufferViewHeap;
         private PipelineState pipelineState;
         private GraphicsCommandList commandList;
         private int rtvDescriptorSize;
@@ -35,6 +44,10 @@ namespace CubeRender
         //App resources
         Resource vertexBuffer;
         VertexBufferView vertexBufferView;
+        Resource constantBuffer;
+        ConstantBufferData constantBufferData;
+        IntPtr constantBufferPointer;
+        
 
         //Synchronization objetcs.
         private int frameIndex;
@@ -85,6 +98,15 @@ namespace CubeRender
 
             }
 
+            var cbvHeapDesc = new DescriptorHeapDescription()
+            {
+                DescriptorCount = 1,
+                Flags = DescriptorHeapFlags.ShaderVisible,
+                Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
+            };
+
+            constantBufferViewHeap = device.CreateDescriptorHeap(cbvHeapDesc);
+
             var rtvHeapDesc = new DescriptorHeapDescription()
             {
                 DescriptorCount = FrameCount,
@@ -108,15 +130,36 @@ namespace CubeRender
 
         private void LoadAssets()
         {
-            var rootSignatureDesc = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout);
+            var rootSignatureDesc = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout,
+                // Root Parameters
+                new[]
+                {
+                    new RootParameter(ShaderVisibility.Vertex,
+                        new DescriptorRange()
+                        {
+                            RangeType = DescriptorRangeType.ConstantBufferView,
+                            BaseShaderRegister = 0,
+                            OffsetInDescriptorsFromTableStart = int.MinValue,
+                            DescriptorCount = 1
+                        })
+                });
             rootSignature = device.CreateRootSignature(rootSignatureDesc.Serialize());
 
-            var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("../../shaders.hlsl", "VSMain", "vs_5_0"));
-            var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("../../shaders.hlsl", "PSMain", "ps_5_0"));
+#if DEBUG
+            var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
+#else
+            var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("haders.hlsl", "VSMain", "vs_5_0"));
+#endif
+
+#if DEBUG
+            var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "PSMain", "ps_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
+#else
+            var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "PSMain", "ps_5_0"));
+#endif
 
             var inputElementDescs = new[]
             {
-                new InputElement("POSTION", 0, Format.R32G32B32_Float, 0 ,0),
+                new InputElement("POSITION", 0, Format.R32G32B32_Float, 0 ,0),
                 new InputElement("COLOR", 0, Format.R32G32B32_Float, 12, 0)
             };
 
@@ -147,9 +190,9 @@ namespace CubeRender
 
             var triangleVertices = new[]
             {
-                new Vertex() {Position=new Vector3(0.0f, 0.25f * aspectRatio, 0.0f ),Color=new Vector4(1.0f, 0.0f, 0.0f, 1.0f ) },
-                new Vertex() {Position=new Vector3(0.25f, -0.25f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 1.0f, 0.0f, 1.0f) },
-                new Vertex() {Position=new Vector3(-0.25f, -0.25f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 1.0f, 1.0f ) },
+                new Vertex() {Position=new Vector3(0.0f, 0.01f * aspectRatio, 0.0f ),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f ) },
+                new Vertex() {Position=new Vector3(0.01f, -0.01f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
+                new Vertex() {Position=new Vector3(-0.01f, -0.01f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f ) }
             };
 
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -166,17 +209,50 @@ namespace CubeRender
 
             commandList.Close();
 
+            constantBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
+
+            var cbDesc = new ConstantBufferViewDescription()
+            {
+                BufferLocation = constantBuffer.GPUVirtualAddress,
+                SizeInBytes = (Utilities.SizeOf <ConstantBufferData>() +255) & ~255
+            };
+            device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
+
+            constantBufferData = new ConstantBufferData {
+                Cube = new Vector4[]
+                {
+                    new Vector4(-1.6079f, -0.4078f, -0.4982f, 1f),
+                    new Vector4(-0.4690f, 1.0140f, -1.3235f, 1f),
+                    new Vector4(-0.0470f, -1.6582f, -0.4982f,1f),
+                    new Vector4(-0.0470f, -1.6582f, -0.4982f,1f),
+                    new Vector4(-1.6079f, -0.4078f, -0.4982f,1f),
+                    new Vector4(0.0470f, 1.6582f, 0.4982f, 1f),
+                    new Vector4(1.0920f, -0.2363f, -1.3235f, 1f),
+                    new Vector4(0.4690f, -1.0140f, 1.3235f, 1f),
+                    new Vector4(-1.0920f, 0.2363f, 1.3235f, 1f),
+                    new Vector4(1.6079f, 0.4078f, 0.4982f, 1f)
+                },
+                Offset = new Vector4(0f, 0f, 0f, 0f)
+            };
+
+            constantBufferPointer = constantBuffer.Map(0);
+            Utilities.Write(constantBufferPointer, ref constantBufferData);
+
             fence = device.CreateFence(0, FenceFlags.None);
             fenceValue = 1;
             fenceEvent = new AutoResetEvent(false);
 
         }
 
-        private void PopulateCommanList()
+        private void PopulateCommandList()
         {
             commandAllocator.Reset();
             commandList.Reset(commandAllocator, pipelineState);
             commandList.SetGraphicsRootSignature(rootSignature);
+
+            commandList.SetDescriptorHeaps(1, new DescriptorHeap[] { constantBufferViewHeap });
+            commandList.SetGraphicsRootDescriptorTable(0, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
+
             commandList.SetViewport(viewport);
             commandList.SetScissorRectangles(scissorRect);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.Present, ResourceStates.RenderTarget);
@@ -189,6 +265,7 @@ namespace CubeRender
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
             commandList.SetVertexBuffer(0, vertexBufferView);
             commandList.DrawInstanced(3, 1, 0, 0);
+            commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
 
@@ -213,12 +290,19 @@ namespace CubeRender
 
         public void Update()
         {
+            //const float translationSpeed = 0.005f;
+            //const float offsetBounds = 1.25f;
+
+            constantBufferData.Cube[0][2] = 0.4f;
+            constantBufferData.Offset.X = 0.5f;
+
+            Utilities.Write(constantBufferPointer, ref constantBufferData);
 
         }
 
         public void Render()
         {
-            PopulateCommanList();
+            PopulateCommandList();
             commandQueue.ExecuteCommandList(commandList);
             swapChain.Present(1, 0);
             WaitForPreviousFrame();
