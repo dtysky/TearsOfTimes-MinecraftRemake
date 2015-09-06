@@ -19,8 +19,8 @@ namespace CubeRender
 
         struct ConstantBufferData
         {
-            public Vector4[] Cube;
             public Vector4 Offset;
+            public Vertex[] Cube;
         };
         
 
@@ -190,9 +190,19 @@ namespace CubeRender
 
             var triangleVertices = new[]
             {
-                new Vertex() {Position=new Vector3(0.0f, 0.01f * aspectRatio, 0.0f ),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f ) },
-                new Vertex() {Position=new Vector3(0.01f, -0.01f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
-                new Vertex() {Position=new Vector3(-0.01f, -0.01f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f ) }
+                new Vertex() {Position=new Vector3(0.0f, 0.1f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f ) },
+                new Vertex() {Position=new Vector3(0.0f, -0.1f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
+                new Vertex() {Position=new Vector3(-0.1f, 0.01f * aspectRatio, 0.0f),Color=new Vector4(0.0f, 0.0f, 0.0f, 1.0f )}
+                //new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(-0.23f, 0.5f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(0.02f, 0.8f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(0.5f, -0.1f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(0.23f, -0.5f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(-0.5f, 0.1f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                //new Vertex{Position = new Vector3(0.8f, 0.2f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)}
             };
 
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -214,25 +224,26 @@ namespace CubeRender
             var cbDesc = new ConstantBufferViewDescription()
             {
                 BufferLocation = constantBuffer.GPUVirtualAddress,
-                SizeInBytes = (Utilities.SizeOf <ConstantBufferData>() +255) & ~255
+                SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
             device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
 
-            constantBufferData = new ConstantBufferData {
-                Cube = new Vector4[]
+            constantBufferData = new ConstantBufferData
+            {
+                Offset = new Vector4(0f, 0f, 0f, 0f),
+                Cube = new Vertex[]
                 {
-                    new Vector4(-1.6079f, -0.4078f, -0.4982f, 1f),
-                    new Vector4(-0.4690f, 1.0140f, -1.3235f, 1f),
-                    new Vector4(-0.0470f, -1.6582f, -0.4982f,1f),
-                    new Vector4(-0.0470f, -1.6582f, -0.4982f,1f),
-                    new Vector4(-1.6079f, -0.4078f, -0.4982f,1f),
-                    new Vector4(0.0470f, 1.6582f, 0.4982f, 1f),
-                    new Vector4(1.0920f, -0.2363f, -1.3235f, 1f),
-                    new Vector4(0.4690f, -1.0140f, 1.3235f, 1f),
-                    new Vector4(-1.0920f, 0.2363f, 1.3235f, 1f),
-                    new Vector4(1.6079f, 0.4078f, 0.4982f, 1f)
-                },
-                Offset = new Vector4(0f, 0f, 0f, 0f)
+                    new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(-0.23f, 0.5f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(-0.02f, -0.8f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(-0.8f, -0.2f, -0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(0.02f, 0.8f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(0.5f, -0.1f, -0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(0.23f, -0.5f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(-0.5f, 0.1f, 0.6f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)},
+                    new Vertex{Position = new Vector3(0.8f, 0.2f, 0.25f), Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)}
+                }
             };
 
             constantBufferPointer = constantBuffer.Map(0);
@@ -293,8 +304,9 @@ namespace CubeRender
             //const float translationSpeed = 0.005f;
             //const float offsetBounds = 1.25f;
 
-            constantBufferData.Cube[0][2] = 0.4f;
-            constantBufferData.Offset.X = 0.5f;
+            //constantBufferData.Cube.Position.X = 0.8f;
+            //constantBufferData.Offset.X = 0.3f;
+            //constantBufferData.Offset.X = 0.7f;
 
             Utilities.Write(constantBufferPointer, ref constantBufferData);
 
