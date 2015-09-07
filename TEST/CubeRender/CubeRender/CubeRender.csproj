@@ -99,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CubeRender.cs" />
+    <Compile Include="D3DXUtilities.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Viewer.cs" />
   </ItemGroup>
