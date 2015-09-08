@@ -179,7 +179,7 @@ namespace CubeRender
                             {
                                 RangeType = DescriptorRangeType.ConstantBufferView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                OffsetInDescriptorsFromTableStart = int.MinValue + 1,
                                 BaseShaderRegister = 0
                             }
                         }),
@@ -252,36 +252,36 @@ namespace CubeRender
             // build vertex buffer
             var triangleVertices = new[]
             {
-                ////TOP
-                new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
-                new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                //TOP
+                new Vertex() {Position = new Vector3(-5f , 5f , 5f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(5f , 5f , 5f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(5f , 5f ,-5f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-5f , 5f ,-5f) , TexCoord = new Vector2(1f ,0f)} ,
                 //BOTTOM
-                new Vertex() {Position = new Vector3(-1f ,-1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3(1f ,-1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
-                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(-5f ,-5f , 5f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(5f ,-5f , 5f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(5f ,-5f ,-5f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-5f ,-5f ,-5f) , TexCoord = new Vector2(1f ,0f)} ,
                 //LEFT
-                new Vertex() {Position = new Vector3(-1f ,-1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
-                new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
-                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(-5f ,-5f , 5f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(-5f , 5f , 5f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-5f , 5f ,-5f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(-5f ,-5f ,-5f) , TexCoord = new Vector2(1f ,1f)} ,
                 //RIGHT
-                new Vertex() {Position = new Vector3(1f ,-1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(1f ,0f)} ,
-                new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(5f ,-5f , 5f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(5f , 5f , 5f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(5f , 5f ,-5f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(5f ,-5f ,-5f) , TexCoord = new Vector2(0f ,1f)} ,
                 //FRONT
-                new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(1f ,0f)} ,
-                new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(1f ,-1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
-                new Vertex() {Position = new Vector3(-1f ,-1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(-5f , 5f , 5f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(5f , 5f , 5f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(5f ,-5f , 5f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(-5f ,-5f , 5f) , TexCoord = new Vector2(1f ,1f)} ,
                 //BACK
-                new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
-                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)} 
+                new Vertex() {Position = new Vector3(-5f , 5f ,-5f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(5f , 5f ,-5f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(5f ,-5f ,-5f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(-5f ,-5f ,-5f) , TexCoord = new Vector2(0f ,1f)} 
                 //new Vertex() {Position=new Vector3( 1.0f, -1.0f, 0.0f),TexCoord=new Vector2(0.5f, 0.0f)},
                 //new Vertex() {Position=new Vector3( -1.0f,  -1.0f, 0.0f),TexCoord=new Vector2(1.0f, 1.0f)},
                 //new Vertex() {Position=new Vector3( 0.0f,  1.0f, 0.0f),TexCoord=new Vector2(0.0f, 1.0f)}
@@ -391,7 +391,8 @@ namespace CubeRender
                 BufferLocation = constantBuffer.GPUVirtualAddress,
                 SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
-            device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart);
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
 
             constantBufferData = new ConstantBufferData
             {
@@ -453,14 +454,6 @@ namespace CubeRender
             fenceValue = 1;
             fenceEvent = new AutoResetEvent(false);
 
-        }
-
-        private long GetRequiredIntermediateSize(Resource destinationResource, int firstSubresource, int NumSubresources)
-        {
-            var desc = destinationResource.Description;
-            long requiredSize;
-            device.GetCopyableFootprints(ref desc, firstSubresource, NumSubresources, 0, null, null, null, out requiredSize);
-            return requiredSize;
         }
 
         private void PopulateCommandList()
@@ -528,21 +521,21 @@ namespace CubeRender
 
             View = Matrix.LookAtLH(
                 //Position of camera
-                new Vector3(0.0f, -4.0f, -4.0f),
+                new Vector3(0.0f, 10.0f, -100.0f),
                 //Viewpoint of camera
                 new Vector3(0.0f, 0.0f, 0.0f),
                 //"Up"
                 new Vector3(0.0f, 1.0f, 0.0f));
 
-            Project = Matrix.OrthoLH(
+            Project = Matrix.PerspectiveFovLH(
                 //Range of vertical
-                10f,
+                1.0f,
                 //Aspect ratio
-                10f,
+                1280f / 800f,
                 //The nearest distance
-                0.1f,
+                1.0f,
                 //The farthest distance
-                100.0f);
+                1000.0f);
             //Project = Matrix.PerspectiveFovLH(
             //    //Range of vertical
             //    MathUtil.Pi / 3.0f,
