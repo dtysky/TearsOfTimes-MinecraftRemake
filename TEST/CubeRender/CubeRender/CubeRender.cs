@@ -25,9 +25,8 @@ namespace CubeRender
             public Matrix Project;
         };
 
-        const int TextureWidth = 256;
-        const int TextureHeight = 256;
-        const int TexturePixelSize = 4;	// The number of bytes used to represent a pixel in the texture.
+        const int TextureWidth = 512;
+        const int TextureHeight = 512;
 
         const int FrameCount = 2;
 
@@ -41,11 +40,11 @@ namespace CubeRender
         private CommandQueue commandQueue;
         private RootSignature rootSignature;
         private DescriptorHeap renderTargetViewHeap;
-        private DescriptorHeap constantBufferViewHeap;
+        private DescriptorHeap samplerViewHeap;
         private PipelineState pipelineState;
         private GraphicsCommandList commandList;
         private int rtvDescriptorSize;
-        private DescriptorHeap shaderRenderViewHeap;
+        private DescriptorHeap srvCbvHeap;
 
         //App resources
         Resource vertexBuffer;
@@ -118,15 +117,6 @@ namespace CubeRender
 
             }
 
-            var cbvHeapDesc = new DescriptorHeapDescription()
-            {
-                DescriptorCount = 1,
-                Flags = DescriptorHeapFlags.ShaderVisible,
-                Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
-            };
-
-            constantBufferViewHeap = device.CreateDescriptorHeap(cbvHeapDesc);
-
             var rtvHeapDesc = new DescriptorHeapDescription()
             {
                 DescriptorCount = FrameCount,
@@ -137,14 +127,14 @@ namespace CubeRender
             renderTargetViewHeap = device.CreateDescriptorHeap(rtvHeapDesc);
             rtvDescriptorSize = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.RenderTargetView);
 
-            var srvHeapDesc = new DescriptorHeapDescription()
+            var srvCbvHeapDesc = new DescriptorHeapDescription()
             {
                 DescriptorCount = 1,
                 Flags = DescriptorHeapFlags.ShaderVisible,
                 Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
             };
 
-            shaderRenderViewHeap = device.CreateDescriptorHeap(srvHeapDesc);
+            srvCbvHeap = device.CreateDescriptorHeap(srvCbvHeapDesc);
 
             var rtcHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             for (int n = 0; n < FrameCount; n++)
@@ -154,34 +144,63 @@ namespace CubeRender
                 rtcHandle += rtvDescriptorSize;
             }
 
+            var svHeapDesc = new DescriptorHeapDescription()
+            {
+                Type = DescriptorHeapType.Sampler,
+                DescriptorCount = 10,
+                Flags = DescriptorHeapFlags.ShaderVisible,
+                NodeMask = 0
+            };
+            samplerViewHeap = device.CreateDescriptorHeap(svHeapDesc);
+
             commandAllocator = device.CreateCommandAllocator(CommandListType.Direct);
         }
 
         private void LoadAssets()
         {
             // Create the root signature description.
-            var rootSignatureDesc = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout,
+            var rootSignatureDesc = new RootSignatureDescription(
+
+                RootSignatureFlags.AllowInputAssemblerInputLayout,
                 // Root Parameters
                 new[]
                 {
+                    new RootParameter(ShaderVisibility.All,
+                        new []
+                        {
+                            new DescriptorRange()
+                            {
+                                RangeType = DescriptorRangeType.ShaderResourceView,
+                                DescriptorCount = 1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                BaseShaderRegister = 0
+                            },
+                            new DescriptorRange()
+                            {
+                                RangeType = DescriptorRangeType.ConstantBufferView,
+                                DescriptorCount = 1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                BaseShaderRegister = 0
+                            }
+                        }),
                     new RootParameter(ShaderVisibility.Pixel,
                         new DescriptorRange()
                         {
-                            RangeType = DescriptorRangeType.ShaderResourceView,
+                            RangeType = DescriptorRangeType.Sampler,
                             DescriptorCount = 1,
                             OffsetInDescriptorsFromTableStart = int.MinValue,
                             BaseShaderRegister = 0
-                        })
-                },
-                // Samplers
-                new[]
-                {
-                    new StaticSamplerDescription(ShaderVisibility.Pixel, 0, 0)
-                    {
-                        Filter = Filter.MinimumMinMagMipPoint,
-                        AddressUVW = TextureAddressMode.Border,
-                    }
+                        }),
                 });
+                //// Samplers
+                //new[]
+                //{
+                //    new StaticSamplerDescription(ShaderVisibility.Pixel, 0, 0)
+                //    {
+                //        Filter = Filter.MinimumMinMagMipPoint,
+                //        AddressUVW = TextureAddressMode.Border,
+                //    }
+                //});
 
             rootSignature = device.CreateRootSignature(0, rootSignatureDesc.Serialize());
 
@@ -233,22 +252,39 @@ namespace CubeRender
             // build vertex buffer
             var triangleVertices = new[]
             {
-                //new Vertex() {Position=new Vector3(-1.0f, -1.0f, -1.0f),Color=new Vector3(0.0f, 0.0f, 0.0f)},
-                //new Vertex() {Position=new Vector3(-1.0f, -1.0f,  1.0f),Color=new Vector3(0.0f, 0.0f, 1.0f)},
-                //new Vertex() {Position=new Vector3(-1.0f,  1.0f, -1.0f),Color=new Vector3(0.0f, 1.0f, 0.0f)},
-                //new Vertex() {Position=new Vector3(-1.0f,  1.0f,  1.0f),Color=new Vector3(0.0f, 1.0f, 1.0f)},
-                //new Vertex() {Position=new Vector3( 1.0f, -1.0f, -1.0f),Color=new Vector3(1.0f, 0.0f, 0.0f)},
-                //new Vertex() {Position=new Vector3( 1.0f, -1.0f,  1.0f),Color=new Vector3(1.0f, 0.0f, 1.0f)},
-                //new Vertex() {Position=new Vector3( 1.0f,  1.0f, -1.0f),Color=new Vector3(1.0f, 1.0f, 0.0f)},
-                //new Vertex() {Position=new Vector3( 1.0f,  1.0f,  1.0f),Color=new Vector3(1.0f, 1.0f, 1.0f)}
-                new Vertex() {Position=new Vector3(-1.0f, -1.0f, -1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3(-1.0f, -1.0f,  1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3(-1.0f,  1.0f, -1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3(-1.0f,  1.0f,  1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3( 1.0f, -1.0f, -1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3( 1.0f, -1.0f,  1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3( 1.0f,  1.0f, -1.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                new Vertex() {Position=new Vector3( 1.0f,  1.0f,  1.0f),TexCoord=new Vector2(1.0f, 1.0f)}
+                ////TOP
+                new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                //BOTTOM
+                new Vertex() {Position = new Vector3(-1f ,-1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                //LEFT
+                new Vertex() {Position = new Vector3(-1f ,-1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
+                //RIGHT
+                new Vertex() {Position = new Vector3(1f ,-1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)} ,
+                //FRONT
+                new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
+                //BACK
+                new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)} 
+                //new Vertex() {Position=new Vector3( 1.0f, -1.0f, 0.0f),TexCoord=new Vector2(0.5f, 0.0f)},
+                //new Vertex() {Position=new Vector3( -1.0f,  -1.0f, 0.0f),TexCoord=new Vector2(1.0f, 1.0f)},
+                //new Vertex() {Position=new Vector3( 0.0f,  1.0f, 0.0f),TexCoord=new Vector2(0.0f, 1.0f)}
             };
 
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -267,23 +303,23 @@ namespace CubeRender
 
             var triangleIndexes = new uint[]
             {
-                 0,2,1, // -x
-                 1,2,3,
-                 
-                 4,5,6, // +x
-                 5,7,6,
-                 
-                 0,1,5, // -y
-                 0,5,4,
-                 
-                 2,6,7, // +y
-                 2,7,3,
-                 
-                 0,4,6, // -z
-                 0,6,2,
-                 
-                 1,3,7, // +z
-                 1,7,5
+                0,1,2,
+                0,2,3,
+                
+                4,6,5,
+                4,7,6,
+                
+                8,9,10,
+                8,10,11,
+                
+                12,14,13,
+                12,15,14,
+                
+                16,18,17,
+                16,19,18,
+                
+                20,21,22,
+                20,22,23
             };
 
             int indexBufferSize = Utilities.SizeOf(triangleIndexes);
@@ -300,27 +336,19 @@ namespace CubeRender
 
             // Create the texture.
             // Describe and create a Texture2D.
-            var textureDesc = ResourceDescription.Texture2D(Format.R8G8B8A8_UNorm, TextureWidth, TextureHeight);
-            texture = device.CreateCommittedResource(new HeapProperties(HeapType.Default), HeapFlags.None, textureDesc, ResourceStates.CopyDestination);
-
-            long uploadBufferSize = GetRequiredIntermediateSize(texture, 0, 1);
-
-            // Create the GPU upload buffer.
-            var textureUploadHeap = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Texture2D(Format.R8G8B8A8_UNorm, TextureWidth, TextureHeight), ResourceStates.GenericRead);
+            var textureDesc = ResourceDescription.Texture2D(Format.R8G8B8A8_UNorm, TextureWidth, TextureHeight, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
+            texture = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, textureDesc, ResourceStates.GenericRead, null);
 
             // Copy data to the intermediate upload heap and then schedule a copy 
             // from the upload heap to the Texture2D.
-            //byte[] textureData = Utilities.ReadStream(new FileStream("../../texture.dds", FileMode.Open));
-            byte[] textureData = GenerateTextureData();
+            byte[] textureData = Utilities.ReadStream(new FileStream("../../texture.dds", FileMode.Open));
+
+            texture.Name = "Texture";
 
             var handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
             var ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
-            textureUploadHeap.WriteToSubresource(0, null, ptr, TextureWidth * TexturePixelSize, textureData.Length);
+            texture.WriteToSubresource(0, null, ptr, TextureWidth * 4, textureData.Length);
             handle.Free();
-
-            commandList.CopyTextureRegion(new TextureCopyLocation(texture, 0), 0, 0, 0, new TextureCopyLocation(textureUploadHeap, 0), null);
-
-            commandList.ResourceBarrierTransition(this.texture, ResourceStates.CopyDestination, ResourceStates.PixelShaderResource);
 
             // Describe and create a SRV for the texture.
             var srvDesc = new ShaderResourceViewDescription
@@ -328,29 +356,50 @@ namespace CubeRender
                 Shader4ComponentMapping = D3DXUtilities.DefaultComponentMapping(),
                 Format = textureDesc.Format,
                 Dimension = ShaderResourceViewDimension.Texture2D,
-                Texture2D = { MipLevels = 1 },
+                Texture2D = 
+                { 
+                    MipLevels = 1,
+                    MostDetailedMip = 0,
+                    PlaneSlice = 0,
+                    ResourceMinLODClamp = 0.0f
+                },
             };
 
-            device.CreateShaderResourceView(this.texture, srvDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart);
+            device.CreateShaderResourceView(texture, srvDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart);
 
-            //// build constant buffer
+            SamplerStateDescription samplerDesc = new SamplerStateDescription
+            {
+                Filter = Filter.MinMagMipLinear,
+                AddressU = TextureAddressMode.Clamp,
+                AddressV = TextureAddressMode.Clamp,
+                AddressW = TextureAddressMode.Clamp,
+                MaximumAnisotropy = 0,
+                MaximumLod = float.MaxValue,
+                MinimumLod = -float.MaxValue,
+                MipLodBias = 0,
+                ComparisonFunction = Comparison.Never
+            };
 
-            //constantBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
+            device.CreateSampler(samplerDesc, samplerViewHeap.CPUDescriptorHandleForHeapStart);
 
-            //var cbDesc = new ConstantBufferViewDescription()
-            //{
-            //    BufferLocation = constantBuffer.GPUVirtualAddress,
-            //    SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
-            //};
-            //device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
+            // build constant buffer
 
-            //constantBufferData = new ConstantBufferData
-            //{
-            //    Project = Matrix.Identity
-            //};
+            constantBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
 
-            //constantBufferPointer = constantBuffer.Map(0);
-            //Utilities.Write(constantBufferPointer, ref constantBufferData);
+            var cbDesc = new ConstantBufferViewDescription()
+            {
+                BufferLocation = constantBuffer.GPUVirtualAddress,
+                SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
+            };
+            device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart);
+
+            constantBufferData = new ConstantBufferData
+            {
+                Project = Matrix.Identity
+            };
+
+            constantBufferPointer = constantBuffer.Map(0);
+            Utilities.Write(constantBufferPointer, ref constantBufferData);
 
             // build depth buffer
 
@@ -414,48 +463,14 @@ namespace CubeRender
             return requiredSize;
         }
 
-        byte[] GenerateTextureData()
-        {
-            int rowPitch = TextureWidth * TexturePixelSize;
-            int cellPitch = rowPitch >> 3;       // The width of a cell in the checkboard texture.
-            int cellHeight = TextureWidth >> 3;  // The height of a cell in the checkerboard texture.
-            int textureSize = rowPitch * TextureHeight;
-            byte[] data = new byte[textureSize];
-
-            for (int n = 0; n < textureSize; n += TexturePixelSize)
-            {
-                int x = n % rowPitch;
-                int y = n / rowPitch;
-                int i = x / cellPitch;
-                int j = y / cellHeight;
-
-                if (i % 2 == j % 2)
-                {
-                    data[n] = 0x00;     // R
-                    data[n + 1] = 0x00; // G
-                    data[n + 2] = 0x00; // B
-                    data[n + 3] = 0xff; // A
-                }
-                else
-                {
-                    data[n] = 0xff;     // R
-                    data[n + 1] = 0xff; // G
-                    data[n + 2] = 0xff; // B
-                    data[n + 3] = 0xff; // A
-                }
-            }
-
-            return data;
-        }
-
         private void PopulateCommandList()
         {
             commandAllocator.Reset();
             commandList.Reset(commandAllocator, pipelineState);
             commandList.SetGraphicsRootSignature(rootSignature);
 
-            commandList.SetDescriptorHeaps(1, new DescriptorHeap[] { shaderRenderViewHeap });
-            commandList.SetGraphicsRootDescriptorTable(0, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
+            //commandList.SetDescriptorHeaps(1, new DescriptorHeap[] { shaderRenderViewHeap });
+            //commandList.SetGraphicsRootDescriptorTable(0, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
 
             commandList.SetViewport(viewport);
             commandList.SetScissorRectangles(scissorRect);
@@ -468,11 +483,18 @@ namespace CubeRender
             commandList.ClearRenderTargetView(rtvHandle, new Color4(0, 0.2F, 0.4f, 1), 0, null);
             commandList.SetRenderTargets(1, rtvHandle, false, handleDSV);
 
+            commandList.SetGraphicsRootSignature(rootSignature);
+            DescriptorHeap[] descHeaps = new[] { srvCbvHeap, samplerViewHeap};
+            commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
+            commandList.SetGraphicsRootDescriptorTable(0, srvCbvHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(1, samplerViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.PipelineState = pipelineState;
+
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;        
             commandList.SetVertexBuffer(0, vertexBufferView);
-            //commandList.SetIndexBuffer(indexBufferView);
-            //commandList.DrawIndexedInstanced(36, 1, 0, 0, 0);
-            commandList.DrawInstanced(3, 1, 0, 0);
+            commandList.SetIndexBuffer(indexBufferView);
+            commandList.DrawIndexedInstanced(36, 1, 0, 0, 0);
+            //commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
@@ -504,40 +526,40 @@ namespace CubeRender
             ////Player.UpdateViewMatrix();
             ////constantBufferData.Project = Player.GetProjection();
 
-            //View = Matrix.LookAtLH(
-            //    //Position of camera
-            //    new Vector3(0.0f,-4.0f,-4.0f), 
-            //    //Viewpoint of camera
-            //    new Vector3(0.0f,0.0f,0.0f), 
-            //    //"Up"
-            //    new Vector3(0.0f,1.0f,0.0f));
+            View = Matrix.LookAtLH(
+                //Position of camera
+                new Vector3(0.0f, -4.0f, -4.0f),
+                //Viewpoint of camera
+                new Vector3(0.0f, 0.0f, 0.0f),
+                //"Up"
+                new Vector3(0.0f, 1.0f, 0.0f));
 
-            //Project = Matrix.OrthoLH(
-            //     //Range of vertical
-            //    10f,
+            Project = Matrix.OrthoLH(
+                //Range of vertical
+                10f,
+                //Aspect ratio
+                10f,
+                //The nearest distance
+                0.1f,
+                //The farthest distance
+                100.0f);
+            //Project = Matrix.PerspectiveFovLH(
+            //    //Range of vertical
+            //    MathUtil.Pi / 3.0f,
             //    //Aspect ratio
-            //    10f,
+            //    viewport.Width / viewport.Height,
             //    //The nearest distance
             //    0.1f,
             //    //The farthest distance
             //    100.0f);
-            ////Project = Matrix.PerspectiveFovLH(
-            ////    //Range of vertical
-            ////    MathUtil.Pi / 3.0f,
-            ////    //Aspect ratio
-            ////    viewport.Width / viewport.Height,
-            ////    //The nearest distance
-            ////    0.1f,
-            ////    //The farthest distance
-            ////    100.0f);
 
-            ////
-            //World = Matrix.RotationY(Count * 0.02f);
+            //
+            World = Matrix.RotationY(Count * 0.02f);
 
-            //constantBufferData.Project = (World * View) * Project;
+            constantBufferData.Project = (World * View) * Project;
 
-            //Utilities.Write(constantBufferPointer, ref constantBufferData);
-            //Count++;
+            Utilities.Write(constantBufferPointer, ref constantBufferData);
+            Count++;
         }
 
         public void Render()
