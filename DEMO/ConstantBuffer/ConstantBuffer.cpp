@@ -148,9 +148,9 @@ public:
 
 		{
 			CD3DX12_DESCRIPTOR_RANGE descRange1[2], descRange2[1];
-			descRange1[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-			descRange1[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-			descRange2[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+			descRange1[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, 4294967295U);
+			descRange1[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, -1);
+			descRange2[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0, 4294967295U);
 
 			CD3DX12_ROOT_PARAMETER rootParam[2];
 			rootParam[0].InitAsDescriptorTable(ARRAYSIZE(descRange1), descRange1);

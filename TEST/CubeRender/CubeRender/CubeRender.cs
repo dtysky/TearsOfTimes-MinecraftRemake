@@ -179,7 +179,7 @@ namespace CubeRender
                             {
                                 RangeType = DescriptorRangeType.ConstantBufferView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                OffsetInDescriptorsFromTableStart = -1,
                                 BaseShaderRegister = 0
                             }
                         }),
@@ -192,15 +192,15 @@ namespace CubeRender
                             BaseShaderRegister = 0
                         }),
                 });
-                //// Samplers
-                //new[]
-                //{
-                //    new StaticSamplerDescription(ShaderVisibility.Pixel, 0, 0)
-                //    {
-                //        Filter = Filter.MinimumMinMagMipPoint,
-                //        AddressUVW = TextureAddressMode.Border,
-                //    }
-                //});
+            //// Samplers
+            //new[]
+            //{
+            //    new StaticSamplerDescription(ShaderVisibility.Pixel, 0, 0)
+            //    {
+            //        Filter = Filter.MinimumMinMagMipPoint,
+            //        AddressUVW = TextureAddressMode.Border,
+            //    }
+            //});
 
             rootSignature = device.CreateRootSignature(0, rootSignatureDesc.Serialize());
 
@@ -252,6 +252,7 @@ namespace CubeRender
             // build vertex buffer
             var triangleVertices = new[]
             {
+                /*
                 ////TOP
                 new Vertex() {Position = new Vector3(-1f ,1f ,1f) , TexCoord = new Vector2(1f ,1f)} ,
                 new Vertex() {Position = new Vector3(1f ,1f ,1f) , TexCoord = new Vector2(0f ,1f)} ,
@@ -281,10 +282,11 @@ namespace CubeRender
                 new Vertex() {Position = new Vector3(-1f ,1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
                 new Vertex() {Position = new Vector3(1f ,1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
                 new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)} 
-                //new Vertex() {Position=new Vector3( 1.0f, -1.0f, 0.0f),TexCoord=new Vector2(0.5f, 0.0f)},
-                //new Vertex() {Position=new Vector3( -1.0f,  -1.0f, 0.0f),TexCoord=new Vector2(1.0f, 1.0f)},
-                //new Vertex() {Position=new Vector3( 0.0f,  1.0f, 0.0f),TexCoord=new Vector2(0.0f, 1.0f)}
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)}, 
+                */
+                new Vertex() {Position=new Vector3( 1.0f, -1.0f, 0.0f),TexCoord=new Vector2(0.5f, 0.0f)},
+                new Vertex() {Position=new Vector3( -1.0f,  -1.0f, 0.0f),TexCoord=new Vector2(1.0f, 1.0f)},
+                new Vertex() {Position=new Vector3( 0.0f,  1.0f, 0.0f),TexCoord=new Vector2(0.0f, 1.0f)}
             };
 
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -300,7 +302,7 @@ namespace CubeRender
             vertexBufferView.SizeInBytes = vertexBufferSize;
 
             // build index buffer
-
+            
             var triangleIndexes = new uint[]
             {
                 0,1,2,
@@ -493,8 +495,8 @@ namespace CubeRender
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;        
             commandList.SetVertexBuffer(0, vertexBufferView);
             commandList.SetIndexBuffer(indexBufferView);
-            commandList.DrawIndexedInstanced(36, 1, 0, 0, 0);
-            //commandList.DrawInstanced(3, 1, 0, 0);
+            //commandList.DrawIndexedInstanced(36, 1, 0, 0, 0);
+            commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
