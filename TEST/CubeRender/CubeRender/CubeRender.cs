@@ -2,6 +2,7 @@
 using System.Threading;
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace CubeRender
 {
@@ -217,6 +218,13 @@ namespace CubeRender
             var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "PSMain", "ps_5_0"));
 #endif
 
+#if DEBUG
+            //var result = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "GSMain", "gs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
+            var geometryShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "GSMain", "gs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
+#else
+            var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "PSMain", "ps_5_0"));
+#endif
+
             // Define the vertex input layout.
             var inputElementDescs = new[]
             {
@@ -230,6 +238,7 @@ namespace CubeRender
                 InputLayout = new InputLayoutDescription(inputElementDescs),
                 RootSignature = rootSignature,
                 VertexShader = vertexShader,
+                GeometryShader = geometryShader,
                 PixelShader = pixelShader,
                 RasterizerState = RasterizerStateDescription.Default(),
                 BlendState = BlendStateDescription.Default(),
@@ -256,6 +265,7 @@ namespace CubeRender
             commandList.Close();
 
             // build vertex buffer
+
             var triangleVertices = new[]
             {
                 //TOP
@@ -358,7 +368,7 @@ namespace CubeRender
             {
                 Shader4ComponentMapping = ((((0) & 0x7) |(((1) & 0x7) << 3) |(((2) & 0x7) << (3 * 2)) |(((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
 
-            Format = textureDesc.Format,
+                Format = textureDesc.Format,
                 Dimension = ShaderResourceViewDimension.Texture2D,
                 Texture2D = 
                 { 
