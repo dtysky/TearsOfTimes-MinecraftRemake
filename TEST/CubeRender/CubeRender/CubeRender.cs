@@ -258,14 +258,36 @@ namespace CubeRender
             // build vertex buffer
             var triangleVertices = new[]
             {
-                new Vertex() {Position = new Vector3(-1.0f, -1.0f, -1.0f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3(-1.0f, -1.0f,  1.0f) , TexCoord = new Vector2(0f ,1f)} ,
-                new Vertex() {Position = new Vector3(-1.0f,  1.0f, -1.0f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3(-1.0f,  1.0f,  1.0f) , TexCoord = new Vector2(1f ,0f)} ,
-                new Vertex() {Position = new Vector3( 1.0f, -1.0f, -1.0f) , TexCoord = new Vector2(1f ,1f)} ,
-                new Vertex() {Position = new Vector3( 1.0f, -1.0f,  1.0f) , TexCoord = new Vector2(0f ,1f)} ,
-                new Vertex() {Position = new Vector3( 1.0f,  1.0f, -1.0f) , TexCoord = new Vector2(0f ,0f)} ,
-                new Vertex() {Position = new Vector3( 1.0f,  1.0f,  1.0f) , TexCoord = new Vector2(1f ,0f)}
+                //TOP
+                new Vertex() {Position = new Vector3(-1f , 1f , 1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f , 1f , 1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f , 1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f , 1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                //BOTTOM
+                new Vertex() {Position = new Vector3(-1f ,-1f , 1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f , 1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                //LEFT
+                new Vertex() {Position = new Vector3(-1f ,-1f , 1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(-1f , 1f , 1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f , 1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
+                //RIGHT
+                new Vertex() {Position = new Vector3(1f ,-1f , 1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(1f , 1f , 1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f , 1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)} ,
+                //FRONT
+                new Vertex() {Position = new Vector3(-1f , 1f , 1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f , 1f , 1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f , 1f) , TexCoord = new Vector2(0f ,1f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f , 1f) , TexCoord = new Vector2(1f ,1f)} ,
+                //BACK
+                new Vertex() {Position = new Vector3(-1f , 1f ,-1f) , TexCoord = new Vector2(0f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f , 1f ,-1f) , TexCoord = new Vector2(1f ,0f)} ,
+                new Vertex() {Position = new Vector3(1f ,-1f ,-1f) , TexCoord = new Vector2(1f ,1f)} ,
+                new Vertex() {Position = new Vector3(-1f ,-1f ,-1f) , TexCoord = new Vector2(0f ,1f)}
             };
 
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -284,23 +306,23 @@ namespace CubeRender
 
             var triangleIndexes = new uint[]
             {
-                 0,2,1, // -x
-                 1,2,3,
+                0,1,2,
+                0,2,3,
 
-                 4,5,6, // +x
-                 5,7,6,
+                4,6,5,
+                4,7,6,
 
-                 0,1,5, // -y
-                 0,5,4,
+                8,9,10,
+                8,10,11,
 
-                 2,6,7, // +y
-                 2,7,3,
+                12,14,13,
+                12,15,14,
 
-                 0,4,6, // -z
-                 0,6,2,
+                16,18,17,
+                16,19,18,
 
-                 1,3,7, // +z
-                 1,7,5
+                20,21,22,
+                20,22,23
             };
 
             int indexBufferSize = Utilities.SizeOf(triangleIndexes);
@@ -501,15 +523,39 @@ namespace CubeRender
             ////Player.UpdateViewMatrix();
             ////constantBufferData.Project = Player.GetProjection();
 
-            View = Matrix.LookAtLH(new Vector3(0.0f, 2.0f, -4.5f), new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f));
-            Project = Matrix.PerspectiveFovLH(MathUtil.Pi / 3.0f, viewport.Width / viewport.Height, 0.1f, 100.0f);
+            View = Matrix.LookAtLH(
+                //Position of camera
+                new Vector3(0.0f, 0.0f, -5.0f),
+                //Viewpoint of camera
+                new Vector3(0.0f, 0.0f, 0.0f),
+                //"Up"
+                new Vector3(0.0f, 1.0f, 0.0f));
+
+            Project = Matrix.PerspectiveFovLH(
+                //Range of vertical
+                MathUtil.Pi / 3f,
+                //Aspect ratio
+                viewport.Width / viewport.Height,
+                //The nearest distance
+                1.0f,
+                //The farthest distance
+                1000.0f);
+            //Project = Matrix.PerspectiveFovLH(
+            //    //Range of vertical
+            //    MathUtil.Pi / 3.0f,
+            //    //Aspect ratio
+            //    viewport.Width / viewport.Height,
+            //    //The nearest distance
+            //    8f,
+            //    //The farthest distance
+            //    10000.0f);
+
+            //
             World = Matrix.RotationY(Count * 0.02f);
             constantBufferData.Project = (World * View) * Project;
 
             //
             
-
-            constantBufferData.Project = (World * View) * Project;
 
             Utilities.Write(constantBufferPointer, ref constantBufferData);
             Count++;
