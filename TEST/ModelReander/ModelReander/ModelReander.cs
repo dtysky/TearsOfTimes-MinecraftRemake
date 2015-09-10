@@ -68,6 +68,7 @@ namespace ModelRender
         private Fence fence;
         private int fenceValue;
 
+        private int IndexCount = 0;
         Matrix World = Matrix.Identity;
         Matrix Project = Matrix.Identity;
         Matrix View = Matrix.Identity;
@@ -278,7 +279,7 @@ namespace ModelRender
             var triangleIndexes = new List<uint>();
 
             uint i = 0;
-            foreach (ObjParser.Types.Face f in meshFaces)
+            foreach (var f in meshFaces)
             {
                 int l = f.VertexIndexList.Length;
                 for (int j = 0; j < l; j++)
@@ -310,7 +311,7 @@ namespace ModelRender
                 }
                 
             }
-
+            IndexCount = (int)i;
             int vertexBufferSize = Utilities.SizeOf(triangleVertices.ToArray());
 
             vertexBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(vertexBufferSize), ResourceStates.GenericRead);
@@ -490,7 +491,7 @@ namespace ModelRender
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
             commandList.SetVertexBuffer(0, vertexBufferView);
             commandList.SetIndexBuffer(indexBufferView);
-            commandList.DrawIndexedInstanced(36, 1, 0, 0, 0);
+            commandList.DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
             //commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 

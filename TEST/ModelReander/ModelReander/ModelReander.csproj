@@ -38,61 +38,61 @@
       <HintPath>.\ObjParser.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>..\..\SharpDX12\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Animation">
-      <HintPath>..\..\SharpDX12\SharpDX.Animation.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Animation.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler">
-      <HintPath>..\..\SharpDX12\SharpDX.D3DCompiler.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.D3DCompiler.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Desktop">
-      <HintPath>..\..\SharpDX12\SharpDX.Desktop.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Desktop.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct2D1">
-      <HintPath>..\..\SharpDX12\SharpDX.Direct2D1.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\..\SharpDX12\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11.Effects">
-      <HintPath>..\..\SharpDX12\SharpDX.Direct3D11.Effects.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Direct3D11.Effects.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D12">
-      <HintPath>..\..\SharpDX12\SharpDX.Direct3D12.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Direct3D12.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>..\..\SharpDX12\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DirectComposition">
-      <HintPath>..\..\SharpDX12\SharpDX.DirectComposition.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.DirectComposition.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DirectInput">
-      <HintPath>..\..\SharpDX12\SharpDX.DirectInput.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.DirectInput.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DirectManipulation">
-      <HintPath>..\..\SharpDX12\SharpDX.DirectManipulation.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.DirectManipulation.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DirectSound">
-      <HintPath>..\..\SharpDX12\SharpDX.DirectSound.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.DirectSound.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DXGI">
-      <HintPath>..\..\SharpDX12\SharpDX.DXGI.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\..\SharpDX12\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.MediaFoundation">
-      <HintPath>..\..\SharpDX12\SharpDX.MediaFoundation.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.MediaFoundation.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.RawInput">
-      <HintPath>..\..\SharpDX12\SharpDX.RawInput.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.RawInput.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.XAudio2">
-      <HintPath>..\..\SharpDX12\SharpDX.XAudio2.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.XAudio2.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.XInput">
-      <HintPath>..\..\SharpDX12\SharpDX.XInput.dll</HintPath>
+      <HintPath>..\..\..\Loader_Client\Libs\SharpDX.XInput.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -108,13 +108,15 @@
   <ItemGroup>
     <Compile Include="ModelReander.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="shaders.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
