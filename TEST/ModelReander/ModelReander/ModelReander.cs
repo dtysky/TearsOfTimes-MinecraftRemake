@@ -267,7 +267,7 @@ namespace ModelRender
 
             //build model with .obj
             var mesh = new Obj();
-            mesh.LoadObj("../../dog.obj");
+            mesh.LoadObj("../../models/MarieRose/aaa.obj");
 
             // build vertex buffer
 
@@ -345,7 +345,7 @@ namespace ModelRender
 
             // Copy data to the intermediate upload heap and then schedule a copy 
             // from the upload heap to the Texture2D.
-            byte[] textureData = Utilities.ReadStream(new FileStream("../../Texture.dds", FileMode.Open));
+            byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/Kok_Bikini_d.tga", FileMode.Open));
 
             texture.Name = "Texture";
 
@@ -544,7 +544,7 @@ namespace ModelRender
 
             //
             World = Matrix.RotationY(Count * 0.02f);
-            //World = Matrix.RotationY(0f);
+            World *= Matrix.Scaling(70f);
 
             constantBufferData.Project = (World * View) * Project;
 
