@@ -1,0 +1,86 @@
+newmtl DustOfSnow1:initialShadingGroup
+illum 4
+Kd 1.00 1.00 1.00
+Ka 0.00 0.10 0.63
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl DustOfSnow1:phongE21SG
+illum 4
+Kd 0.24 0.30 0.51
+Ka 0.30 0.39 0.47
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 0.06
+newmtl DustOfSnow1:phongE23SG
+illum 4
+Kd 0.73 0.83 1.00
+Ka 0.00 0.15 0.53
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 0.06
+newmtl DustOfSnow1:phongE24SG
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 0.06
+newmtl initialShadingGroup
+illum 4
+Kd 1.00 1.00 1.00
+Ka 0.00 0.10 0.63
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl phong2SG
+illum 4
+Kd 0.22 0.66 1.00
+Ka 0.10 0.25 0.41
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 18.00
+newmtl phongE8SG
+illum 4
+Kd 0.16 0.53 1.00
+Ka 0.61 0.73 0.82
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl phongE10SG
+illum 4
+Kd 0.12 0.26 0.76
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl phongE20SG
+illum 4
+Kd 0.29 0.42 0.81
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl phongE21SG
+illum 4
+Kd 0.24 0.30 0.51
+Ka 0.30 0.39 0.47
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl phongE22SG
+illum 4
+Kd 0.04 0.42 0.90
+Ka 0.73 0.73 0.73
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl phongE23SG
+illum 4
+Kd 0.73 0.83 1.00
+Ka 0.00 0.15 0.53
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50

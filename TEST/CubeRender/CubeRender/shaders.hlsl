@@ -33,7 +33,7 @@ void GSMain(triangle GSInput input[3], inout TriangleStream<PSInput> TriStream)
 	PSInput result[3];
 	float4 P = float4(0.0f, 0.0f, 0.0f, 1);
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		result[0].position = mul(project, input[0].position + P);
 		result[0].uv = input[0].uv;

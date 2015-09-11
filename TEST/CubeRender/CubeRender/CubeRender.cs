@@ -354,7 +354,7 @@ namespace CubeRender
 
             // Copy data to the intermediate upload heap and then schedule a copy 
             // from the upload heap to the Texture2D.
-            byte[] textureData = Utilities.ReadStream(new FileStream("../../texture.dds", FileMode.Open));
+            byte[] textureData = Utilities.ReadStream(new FileStream("../../texture1.dds", FileMode.Open));
 
             texture.Name = "Texture";
 
@@ -535,7 +535,7 @@ namespace CubeRender
 
             View = Matrix.LookAtLH(
                 //Position of camera
-                new Vector3(0.0f, 0.0f, -5.0f),
+                new Vector3(0.0f, 0.0f, -4.0f),
                 //Viewpoint of camera
                 new Vector3(0.0f, 0.0f, 0.0f),
                 //"Up"
@@ -550,15 +550,6 @@ namespace CubeRender
                 1.0f,
                 //The farthest distance
                 1000.0f);
-            //Project = Matrix.PerspectiveFovLH(
-            //    //Range of vertical
-            //    MathUtil.Pi / 3.0f,
-            //    //Aspect ratio
-            //    viewport.Width / viewport.Height,
-            //    //The nearest distance
-            //    8f,
-            //    //The farthest distance
-            //    10000.0f);
 
             //
             World = Matrix.RotationY(Count * 0.02f);

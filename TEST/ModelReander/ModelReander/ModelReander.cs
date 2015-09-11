@@ -12,6 +12,8 @@ namespace ModelRender
     using System.Runtime.InteropServices;
     using SharpDX.Mathematics;
     using ObjParser;
+    using Assimp;
+    using Assimp.Configs;
 
     public class ModelRender : IDisposable
     {
@@ -266,8 +268,17 @@ namespace ModelRender
             commandList.Close();
 
             //build model with .obj
+            String filename = "../../models/MarieRose/aaa.obj";
+
+            var modelImporter = new Assimp.AssimpImporter();
+            var config = new NormalSmoothingAngleConfig(66.0f);
+            modelImporter.SetConfig(config);
+            var model = modelImporter.ImportFile(filename, PostProcessPreset.TargetRealTimeMaximumQuality);
+
+            var meshes = model.Meshes;
+
             var mesh = new Obj();
-            mesh.LoadObj("../../models/MarieRose/aaa.obj");
+            mesh.LoadObj("../../models/DustOfSnow/DustOfSnow.obj");
 
             // build vertex buffer
 
@@ -526,7 +537,7 @@ namespace ModelRender
 
             View = Matrix.LookAtLH(
                 //Position of camera
-                new Vector3(0.0f, 100.0f, -80.0f),
+                new Vector3(0.0f, 0.0f, -100.0f),
                 //Viewpoint of camera
                 new Vector3(0.0f, 50.0f, 0.0f),
                 //"Up"
@@ -544,7 +555,7 @@ namespace ModelRender
 
             //
             World = Matrix.RotationY(Count * 0.02f);
-            World *= Matrix.Scaling(70f);
+            World *= Matrix.Scaling(8f);
 
             constantBufferData.Project = (World * View) * Project;
 
