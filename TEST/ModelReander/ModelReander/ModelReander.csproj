@@ -39,6 +39,10 @@
     <Reference Include="AssimpNet">
       <HintPath>..\..\Assimp\AssimpNet.dll</HintPath>
     </Reference>
+    <Reference Include="DevILNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\DevIL\DevILNet.dll</HintPath>
+    </Reference>
     <Reference Include="ObjParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\ObjParser.dll</HintPath>
@@ -112,6 +116,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model.cs" />
     <Compile Include="ModelReander.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>

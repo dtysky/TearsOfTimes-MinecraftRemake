@@ -14,10 +14,11 @@ namespace ModelRender
     using ObjParser;
     using Assimp;
     using Assimp.Configs;
+    using System.Windows.Forms;
 
     public class ModelRender : IDisposable
     {
-        struct Vertex
+        public struct Vertex
         {
             public Vector3 Position;
             public Vector2 TexCoord;
@@ -28,8 +29,8 @@ namespace ModelRender
             public Matrix Project;
         };
 
-        const int TextureWidth = 512;
-        const int TextureHeight = 512;
+        const int TextureWidth = 1024;
+        const int TextureHeight = 1024;
 
         const int FrameCount = 2;
 
@@ -267,67 +268,19 @@ namespace ModelRender
             commandList = device.CreateCommandList(CommandListType.Direct, commandAllocator, pipelineState);
             commandList.Close();
 
-            //build model with .obj
-            String filename = "../../models/Dog/dog.obj";
-
-            var modelImporter = new Assimp.AssimpImporter();
-            var config = new NormalSmoothingAngleConfig(66.0f);
-            modelImporter.SetConfig(config);
-            var model = modelImporter.ImportFile(filename, PostProcessPreset.TargetRealTimeMaximumQuality);
+            //model test
+            Model m = Model.LoadFromFile("../../models/MarieRose/aaa.obj");
            
-            var meshes = model.Meshes;
-
-            var mesh = new Obj();
-            mesh.LoadObj("../../models/DustOfSnow/DustOfSnow.obj");
+            var triangleVertices = m.Components[18].Vertices;
+            var triangleIndexes = m.Components[18].Indices;
+            IndexCount = m.Components[18].Indices.Length;
 
             // build vertex buffer
-
-            var meshVertices = mesh.VertexList;
-            var meshTextures = mesh.TextureList;
-            var meshFaces = mesh.FaceList;
-
-            var triangleVertices = new List<Vertex>();
-            var triangleIndexes = new List<uint>();
-
-            uint i = 0;
-            foreach (var f in meshFaces)
-            {
-                int l = f.VertexIndexList.Length;
-                for (int j = 0; j < l; j++)
-                {
-                    var v = meshVertices[f.VertexIndexList[j] - 1];
-                    var t = meshTextures[f.TextureVertexIndexList[j] - 1];
-                    triangleVertices.Add(new Vertex()
-                    {
-                        Position = new Vector3((float)v.X, (float)v.Y, (float)v.Z),
-                        TexCoord = new Vector2((float)t.X, (float)t.Y)
-                    });
-                }
-                if (l == 3)
-                {
-                    triangleIndexes.Add(i);
-                    triangleIndexes.Add(i + 1);
-                    triangleIndexes.Add(i + 2);
-                    i += 3;
-                }
-                else
-                {
-                    triangleIndexes.Add(i);
-                    triangleIndexes.Add(i + 1);
-                    triangleIndexes.Add(i + 3);
-                    triangleIndexes.Add(i + 3);
-                    triangleIndexes.Add(i + 2);
-                    triangleIndexes.Add(i + 1);
-                    i += 4;
-                }
-                
-            }
-            IndexCount = (int)i;
-            int vertexBufferSize = Utilities.SizeOf(triangleVertices.ToArray());
+            int vertexBufferSize = Utilities.SizeOf(triangleVertices);
 
             vertexBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(vertexBufferSize), ResourceStates.GenericRead);
             IntPtr pVertexDataBegin = vertexBuffer.Map(0);
-            Utilities.Write(pVertexDataBegin, triangleVertices.ToArray(), 0, triangleVertices.ToArray().Length);
+            Utilities.Write(pVertexDataBegin, triangleVertices, 0, triangleVertices.Length);
             vertexBuffer.Unmap(0);
 
             vertexBufferView = new VertexBufferView();
@@ -337,11 +290,11 @@ namespace ModelRender
 
             // build index buffer
 
-            int indexBufferSize = Utilities.SizeOf(triangleIndexes.ToArray());
+            int indexBufferSize = Utilities.SizeOf(triangleIndexes);
 
             indexBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(indexBufferSize), ResourceStates.GenericRead);
             IntPtr pIndexDataBegin = indexBuffer.Map(0);
-            Utilities.Write(pIndexDataBegin, triangleIndexes.ToArray(), 0, triangleIndexes.ToArray().Length);
+            Utilities.Write(pIndexDataBegin, triangleIndexes, 0, triangleIndexes.Length);
             indexBuffer.Unmap(0);
 
             indexBufferView = new IndexBufferView();
@@ -351,13 +304,12 @@ namespace ModelRender
 
             // Create the texture.
             // Describe and create a Texture2D.
-            var textureDesc = ResourceDescription.Texture2D(Format.R8G8B8A8_UNorm, TextureWidth, TextureHeight, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
+            var textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, TextureWidth, TextureHeight, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
             texture = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, textureDesc, ResourceStates.GenericRead, null);
 
             // Copy data to the intermediate upload heap and then schedule a copy 
             // from the upload heap to the Texture2D.
-            byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/Kok_Bikini_d.tga", FileMode.Open));
-
+            byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/ss_body_base.dds", FileMode.Open));
             texture.Name = "Texture";
 
             var handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
@@ -529,12 +481,6 @@ namespace ModelRender
 
         public void Update()
         {
-            ////Player.SetPosition(new Vector3(0.0f, 0.0f, 0.0f));
-            ////Player.SetLens(0.25f * (float)Math.PI, 1.0, 1.0f, 1000.0f);
-            ////Player.LookAt(new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f));
-            ////Player.UpdateViewMatrix();
-            ////constantBufferData.Project = Player.GetProjection();
-
             View = Matrix.LookAtLH(
                 //Position of camera
                 new Vector3(0.0f, 0.0f, -100.0f),
@@ -555,7 +501,7 @@ namespace ModelRender
 
             //
             World = Matrix.RotationY(Count * 0.02f);
-            World *= Matrix.Scaling(8f);
+            World *= Matrix.Scaling(80f);
 
             constantBufferData.Project = (World * View) * Project;
 
