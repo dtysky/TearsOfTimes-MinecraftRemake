@@ -268,13 +268,13 @@ namespace ModelRender
             commandList.Close();
 
             //build model with .obj
-            String filename = "../../models/MarieRose/aaa.obj";
+            String filename = "../../models/Dog/dog.obj";
 
             var modelImporter = new Assimp.AssimpImporter();
             var config = new NormalSmoothingAngleConfig(66.0f);
             modelImporter.SetConfig(config);
             var model = modelImporter.ImportFile(filename, PostProcessPreset.TargetRealTimeMaximumQuality);
-
+           
             var meshes = model.Meshes;
 
             var mesh = new Obj();
