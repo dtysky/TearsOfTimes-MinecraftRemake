@@ -119,6 +119,7 @@
     <Compile Include="Model.cs" />
     <Compile Include="ModelReander.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Texture.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

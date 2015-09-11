@@ -29,8 +29,8 @@ namespace ModelRender
             public Matrix Project;
         };
 
-        const int TextureWidth = 1024;
-        const int TextureHeight = 1024;
+        int TextureWidth = 2048;
+        int TextureHeight = 1024;
 
         const int FrameCount = 2;
 
@@ -271,9 +271,20 @@ namespace ModelRender
             //model test
             Model m = Model.LoadFromFile("../../models/MarieRose/aaa.obj");
            
-            var triangleVertices = m.Components[18].Vertices;
-            var triangleIndexes = m.Components[18].Indices;
-            IndexCount = m.Components[18].Indices.Length;
+            Vertex[] triangleVertices = (new Func<Vertex[]>(() => {
+                Vertex[] v = new Vertex[m.Components[16].Vertices.Length];
+                for(int i=0;i< m.Components[16].Vertices.Length;i++)
+                {
+                    v[i].Position.X = m.Components[16].Vertices[i].X;
+                    v[i].Position.Y = m.Components[16].Vertices[i].Y;
+                    v[i].Position.Z = m.Components[16].Vertices[i].Z;
+                    v[i].TexCoord.X = m.Components[16].UV[i].X;
+                    v[i].TexCoord.Y = m.Components[16].UV[i].Y;
+                }
+                return v;
+            }))();
+            var triangleIndexes = m.Components[16].Indices;
+            IndexCount = m.Components[16].Indices.Length;
 
             // build vertex buffer
             int vertexBufferSize = Utilities.SizeOf(triangleVertices);
@@ -302,6 +313,10 @@ namespace ModelRender
             indexBufferView.SizeInBytes = indexBufferSize;
             indexBufferView.Format = Format.R32_UInt;
 
+            //==========
+            var tex = Texture.LoadFromFile("../../models/MarieRose/Kok_Bikini_d.tga");
+            byte[] textureData = tex.Data;
+            TextureWidth = tex.Width; TextureHeight = tex.Height;
             // Create the texture.
             // Describe and create a Texture2D.
             var textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, TextureWidth, TextureHeight, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
@@ -309,7 +324,7 @@ namespace ModelRender
 
             // Copy data to the intermediate upload heap and then schedule a copy 
             // from the upload heap to the Texture2D.
-            byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/ss_body_base.dds", FileMode.Open));
+            //byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/Kok_Bikini_d.dds", FileMode.Open));           
             texture.Name = "Texture";
 
             var handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
@@ -318,6 +333,7 @@ namespace ModelRender
             handle.Free();
 
             // Describe and create a SRV for the texture.
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             var srvDesc = new ShaderResourceViewDescription
             {
                 Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
@@ -359,7 +375,7 @@ namespace ModelRender
                 BufferLocation = constantBuffer.GPUVirtualAddress,
                 SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
-            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            
             device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
 
             constantBufferData = new ConstantBufferData
@@ -501,7 +517,7 @@ namespace ModelRender
 
             //
             World = Matrix.RotationY(Count * 0.02f);
-            World *= Matrix.Scaling(80f);
+            World *= Matrix.Scaling(100f);
 
             constantBufferData.Project = (World * View) * Project;
 

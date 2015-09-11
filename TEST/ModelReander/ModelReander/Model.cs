@@ -23,15 +23,14 @@ namespace ModelRender
         {
             Model model = new Model();
             AssimpContext Context = new AssimpContext();
-            Context.SetConfig(new NormalSmoothingAngleConfig(66.0f));
             Scene scene = Context.ImportFile(Path);
             foreach( Mesh mesh in scene.Meshes )
             {
                 model.Components.Add(new ModelComponent(
                     mesh.Name, 
-                    mesh.Vertices.ToArray(), 
-                    mesh.Faces, 
-                    mesh.TextureCoordinateChannels[0].ToArray(), 
+                    mesh.Vertices, 
+                    mesh.GetIndices(), 
+                    mesh.TextureCoordinateChannels[0], 
                     scene.Materials[mesh.MaterialIndex])
                     );
             }
@@ -42,29 +41,29 @@ namespace ModelRender
 
     class ModelComponent
     {
-        public ModelComponent(string name,Vector3D[] vertices, List<Face> faces, Vector3D[] uv, Material material)
+        public ModelComponent(string name,List<Vector3D> vertices, int[] indices, List<Vector3D> uv, Material material)
         {
-            Vertices = new ModelRender.Vertex[vertices.Length];
-            for (int i = 0; i < vertices.Length; i++)
+            Vertices = new Vector3[vertices.Count];
+            for(int i=0; i<vertices.Count; i++)
             {
-                Vertices[i].Position.X = vertices[i].X;
-                Vertices[i].Position.Y = vertices[i].Y;
-                Vertices[i].Position.Z = vertices[i].Z;
-                Vertices[i].TexCoord.X = uv[i].X;
-                Vertices[i].TexCoord.Y = uv[i].Y;
+                Vertices[i].X = vertices[i].X;
+                Vertices[i].Y = vertices[i].Y;
+                Vertices[i].Z = vertices[i].Z;
             }
-            List<uint> index = new List<uint>();
-            foreach (var face in faces)
-                foreach (var i in face.Indices)
-                    index.Add((uint)i);
-            Indices = index.ToArray();
+            UV = new Vector2[uv.Count];
+            for(int i=0; i<uv.Count; i++)
+            {
+                UV[i].X = uv[i].X;
+                UV[i].Y = uv[i].Y;
+            }
+            Indices = indices;
             Material = material;
         }
 
         public string Name { get; }
-        public uint[] Indices { get; }
+        public Vector3[] Vertices { get; }
+        public int[] Indices { get; }
+        public Vector2[] UV { get; }
         public Material Material { get; }
-
-        public ModelRender.Vertex[] Vertices { get; } 
     }
 }
