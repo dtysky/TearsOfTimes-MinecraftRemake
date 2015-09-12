@@ -61,6 +61,11 @@ namespace ModelRender
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
 
+        Resource vertexBuffer2;
+        Resource indexBuffer2;
+        VertexBufferView vertexBufferView2;
+        IndexBufferView indexBufferView2;
+
 
 
 
@@ -72,6 +77,7 @@ namespace ModelRender
         private int fenceValue;
 
         private int IndexCount = 0;
+        private int IndexCount2 = 0;
         Matrix World = Matrix.Identity;
         Matrix Project = Matrix.Identity;
         Matrix View = Matrix.Identity;
@@ -140,6 +146,7 @@ namespace ModelRender
             };
 
             srvCbvHeap = device.CreateDescriptorHeap(srvCbvHeapDesc);
+            
 
             var rtcHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             for (int n = 0; n < FrameCount; n++)
@@ -314,6 +321,49 @@ namespace ModelRender
             indexBufferView.Format = Format.R32_UInt;
 
             //==========
+            triangleVertices = (new Func<Vertex[]>(() => {
+                Vertex[] v = new Vertex[m.Components[18].Vertices.Length];
+                for (int i = 0; i < m.Components[18].Vertices.Length; i++)
+                {
+                    v[i].Position.X = m.Components[18].Vertices[i].X;
+                    v[i].Position.Y = m.Components[18].Vertices[i].Y;
+                    v[i].Position.Z = m.Components[18].Vertices[i].Z;
+                    v[i].TexCoord.X = m.Components[18].UV[i].X;
+                    v[i].TexCoord.Y = m.Components[18].UV[i].Y;
+                }
+                return v;
+            }))();
+            triangleIndexes = m.Components[18].Indices;
+            IndexCount2 = m.Components[18].Indices.Length;
+
+            // build vertex buffer
+            int vertexBufferSize2 = Utilities.SizeOf(triangleVertices);
+
+            vertexBuffer2 = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(vertexBufferSize2), ResourceStates.GenericRead);
+            IntPtr pVertexDataBegin2 = vertexBuffer2.Map(0);
+            Utilities.Write(pVertexDataBegin2, triangleVertices, 0, triangleVertices.Length);
+            vertexBuffer2.Unmap(0);
+
+            vertexBufferView2 = new VertexBufferView();
+            vertexBufferView2.BufferLocation = vertexBuffer2.GPUVirtualAddress;
+            vertexBufferView2.StrideInBytes = Utilities.SizeOf<Vertex>();
+            vertexBufferView2.SizeInBytes = vertexBufferSize2;
+
+            // build index buffer
+
+            int indexBufferSize2 = Utilities.SizeOf(triangleIndexes);
+
+            indexBuffer2 = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(indexBufferSize2), ResourceStates.GenericRead);
+            IntPtr pIndexDataBegin2 = indexBuffer2.Map(0);
+            Utilities.Write(pIndexDataBegin2, triangleIndexes, 0, triangleIndexes.Length);
+            indexBuffer2.Unmap(0);
+
+            indexBufferView2 = new IndexBufferView();
+            indexBufferView2.BufferLocation = indexBuffer2.GPUVirtualAddress;
+            indexBufferView2.SizeInBytes = indexBufferSize2;
+            indexBufferView2.Format = Format.R32_UInt;
+
+            //==========
             var tex = Texture.LoadFromFile("../../models/MarieRose/Kok_Bikini_d.tga");
             byte[] textureData = tex.Data;
             TextureWidth = tex.Width; TextureHeight = tex.Height;
@@ -333,7 +383,6 @@ namespace ModelRender
             handle.Free();
 
             // Describe and create a SRV for the texture.
-            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             var srvDesc = new ShaderResourceViewDescription
             {
                 Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
@@ -350,6 +399,46 @@ namespace ModelRender
             };
 
             device.CreateShaderResourceView(texture, srvDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart);
+
+            //==============
+            tex = Texture.LoadFromFile("../../models/MarieRose/ss_body_base.dds");
+            textureData = tex.Data;
+            TextureWidth = tex.Width; TextureHeight = tex.Height;
+            // Create the texture.
+            // Describe and create a Texture2D.
+            textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, TextureWidth, TextureHeight, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
+            texture = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, textureDesc, ResourceStates.GenericRead, null);
+
+            // Copy data to the intermediate upload heap and then schedule a copy 
+            // from the upload heap to the Texture2D.
+            //byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/Kok_Bikini_d.dds", FileMode.Open));           
+            texture.Name = "Texture";
+
+            handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
+            ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
+            texture.WriteToSubresource(0, null, ptr, TextureWidth * 4, textureData.Length);
+            handle.Free();
+
+            // Describe and create a SRV for the texture.
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            srvDesc = new ShaderResourceViewDescription
+            {
+                Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
+
+                Format = textureDesc.Format,
+                Dimension = ShaderResourceViewDimension.Texture2D,
+                Texture2D =
+                {
+                    MipLevels = 1,
+                    MostDetailedMip = 0,
+                    PlaneSlice = 0,
+                    ResourceMinLODClamp = 0.0f
+                },
+            };
+
+            device.CreateShaderResourceView(texture, srvDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
+
+            //===========
 
             SamplerStateDescription samplerDesc = new SamplerStateDescription
             {
@@ -375,7 +464,7 @@ namespace ModelRender
                 BufferLocation = constantBuffer.GPUVirtualAddress,
                 SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
-            
+            srvCbvStep += device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
 
             constantBufferData = new ConstantBufferData
@@ -471,6 +560,12 @@ namespace ModelRender
             commandList.SetVertexBuffer(0, vertexBufferView);
             commandList.SetIndexBuffer(indexBufferView);
             commandList.DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
+
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            commandList.SetGraphicsRootDescriptorTable(0, srvCbvHeap.GPUDescriptorHandleForHeapStart + srvCbvStep);
+            commandList.SetVertexBuffer(0, vertexBufferView2);
+            commandList.SetIndexBuffer(indexBufferView2);
+            commandList.DrawIndexedInstanced(IndexCount2, 1, 0, 0, 0);
             //commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 

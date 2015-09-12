@@ -24,7 +24,7 @@ namespace ModelRender
             Model model = new Model();
             AssimpContext Context = new AssimpContext();
             Scene scene = Context.ImportFile(Path);
-            foreach( Mesh mesh in scene.Meshes )
+            foreach(Mesh mesh in scene.Meshes)
             {
                 model.Components.Add(new ModelComponent(
                     mesh.Name, 
@@ -34,7 +34,7 @@ namespace ModelRender
                     scene.Materials[mesh.MaterialIndex])
                     );
             }
-
+            
             return model;
         }
     }
@@ -65,5 +65,7 @@ namespace ModelRender
         public int[] Indices { get; }
         public Vector2[] UV { get; }
         public Material Material { get; }
+
+        public Matrix MatrixProject { get; }
     }
 }
