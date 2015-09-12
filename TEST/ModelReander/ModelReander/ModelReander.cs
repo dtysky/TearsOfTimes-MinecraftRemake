@@ -48,7 +48,8 @@ namespace ModelRender
         private PipelineState pipelineState;
         private GraphicsCommandList commandList;
         private int rtvDescriptorSize;
-        private DescriptorHeap srvCbvHeap;
+        private DescriptorHeap shaderRenderViewHeap;
+        private DescriptorHeap constantBufferViewHeap;
 
         //App resources
         Resource vertexBuffer;
@@ -138,15 +139,24 @@ namespace ModelRender
             renderTargetViewHeap = device.CreateDescriptorHeap(rtvHeapDesc);
             rtvDescriptorSize = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.RenderTargetView);
 
-            var srvCbvHeapDesc = new DescriptorHeapDescription()
+            var srvHeapDesc = new DescriptorHeapDescription()
             {
                 DescriptorCount = 1,
                 Flags = DescriptorHeapFlags.ShaderVisible,
                 Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
             };
 
-            srvCbvHeap = device.CreateDescriptorHeap(srvCbvHeapDesc);
-            
+            shaderRenderViewHeap = device.CreateDescriptorHeap(srvHeapDesc);
+
+            var cbvHeapDesc = new DescriptorHeapDescription()
+            {
+                DescriptorCount = 1,
+                Flags = DescriptorHeapFlags.ShaderVisible,
+                Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
+            };
+
+            constantBufferViewHeap = device.CreateDescriptorHeap(cbvHeapDesc);
+
 
             var rtcHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             for (int n = 0; n < FrameCount; n++)
@@ -183,15 +193,19 @@ namespace ModelRender
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ShaderResourceView,
-                                DescriptorCount = 1,
+                                DescriptorCount = 2,
                                 OffsetInDescriptorsFromTableStart = int.MinValue,
                                 BaseShaderRegister = 0
-                            },
+                            }
+                        }),
+                    new RootParameter(ShaderVisibility.All,
+                        new []
+                        {
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ConstantBufferView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue + 1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue,
                                 BaseShaderRegister = 0
                             }
                         }),
@@ -398,7 +412,7 @@ namespace ModelRender
                 },
             };
 
-            device.CreateShaderResourceView(texture, srvDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart);
+            device.CreateShaderResourceView(texture, srvDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart);
 
             //==============
             tex = Texture.LoadFromFile("../../models/MarieRose/ss_body_base.dds");
@@ -420,7 +434,6 @@ namespace ModelRender
             handle.Free();
 
             // Describe and create a SRV for the texture.
-            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             srvDesc = new ShaderResourceViewDescription
             {
                 Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
@@ -436,7 +449,8 @@ namespace ModelRender
                 },
             };
 
-            device.CreateShaderResourceView(texture, srvDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            device.CreateShaderResourceView(texture, srvDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
 
             //===========
 
@@ -464,8 +478,7 @@ namespace ModelRender
                 BufferLocation = constantBuffer.GPUVirtualAddress,
                 SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
-            srvCbvStep += device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
-            device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
+            device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
 
             constantBufferData = new ConstantBufferData
             {
@@ -550,10 +563,11 @@ namespace ModelRender
             commandList.SetRenderTargets(1, rtvHandle, false, handleDSV);
 
             commandList.SetGraphicsRootSignature(rootSignature);
-            DescriptorHeap[] descHeaps = new[] { srvCbvHeap, samplerViewHeap };
+            DescriptorHeap[] descHeaps = new[] { shaderRenderViewHeap, constantBufferViewHeap, samplerViewHeap };
             commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
-            commandList.SetGraphicsRootDescriptorTable(0, srvCbvHeap.GPUDescriptorHandleForHeapStart);
-            commandList.SetGraphicsRootDescriptorTable(1, samplerViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(1, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(2, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
 
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
@@ -561,8 +575,8 @@ namespace ModelRender
             commandList.SetIndexBuffer(indexBufferView);
             commandList.DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
 
-            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
-            commandList.SetGraphicsRootDescriptorTable(0, srvCbvHeap.GPUDescriptorHandleForHeapStart + srvCbvStep);
+            //var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            //commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + srvCbvStep);
             commandList.SetVertexBuffer(0, vertexBufferView2);
             commandList.SetIndexBuffer(indexBufferView2);
             commandList.DrawIndexedInstanced(IndexCount2, 1, 0, 0, 0);
