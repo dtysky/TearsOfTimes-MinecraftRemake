@@ -62,6 +62,8 @@ namespace ModelRender
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
 
+        IntPtr RootConstantsPointer = Utilities.AllocateMemory(4 * 4 * 4);
+
         Resource vertexBuffer2;
         Resource indexBuffer2;
         VertexBufferView vertexBufferView2;
@@ -141,7 +143,7 @@ namespace ModelRender
 
             var srvHeapDesc = new DescriptorHeapDescription()
             {
-                DescriptorCount = 1,
+                DescriptorCount = 2,
                 Flags = DescriptorHeapFlags.ShaderVisible,
                 Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
             };
@@ -198,17 +200,11 @@ namespace ModelRender
                                 BaseShaderRegister = 0
                             }
                         }),
-                    new RootParameter(ShaderVisibility.All,
-                        new []
-                        {
-                            new DescriptorRange()
-                            {
-                                RangeType = DescriptorRangeType.ConstantBufferView,
-                                DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue,
-                                BaseShaderRegister = 0
-                            }
-                        }),
+                    new RootParameter(ShaderVisibility.All,new RootConstants()
+                    {
+                        ShaderRegister = 0,
+                        Value32BitCount = 16
+                    }),
                     new RootParameter(ShaderVisibility.Pixel,
                         new DescriptorRange()
                         {
@@ -218,18 +214,9 @@ namespace ModelRender
                             BaseShaderRegister = 0
                         }),
                 });
-            //// Samplers
-            //new[]
-            //{
-            //    new StaticSamplerDescription(ShaderVisibility.Pixel, 0, 0)
-            //    {
-            //        Filter = Filter.MinimumMinMagMipPoint,
-            //        AddressUVW = TextureAddressMode.Border,
-            //    }
-            //});
 
             rootSignature = device.CreateRootSignature(0, rootSignatureDesc.Serialize());
-
+            
             // Create the pipeline state, which includes compiling and loading shaders.
 #if DEBUG
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
@@ -242,13 +229,6 @@ namespace ModelRender
 #else
             var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "PSMain", "ps_5_0"));
 #endif
-
-//#if DEBUG
-//            //var result = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "GSMain", "gs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
-//            var geometryShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shader_standard_lim.hlsl"), "GSMain", "gs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
-//#else
-//            var pixelShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "PSMain", "ps_5_0"));
-//#endif
 
             // Define the vertex input layout.
             var inputElementDescs = new[]
@@ -413,7 +393,7 @@ namespace ModelRender
             };
 
             device.CreateShaderResourceView(texture, srvDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart);
-
+            
             //==============
             tex = Texture.LoadFromFile("../../models/MarieRose/ss_body_base.dds");
             textureData = tex.Data;
@@ -451,7 +431,7 @@ namespace ModelRender
 
             var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             device.CreateShaderResourceView(texture, srvDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
-
+            
             //===========
 
             SamplerStateDescription samplerDesc = new SamplerStateDescription
@@ -541,46 +521,43 @@ namespace ModelRender
             fenceEvent = new AutoResetEvent(false);
 
         }
-
         private void PopulateCommandList()
         {
             commandAllocator.Reset();
             commandList.Reset(commandAllocator, pipelineState);
             commandList.SetGraphicsRootSignature(rootSignature);
 
-            //commandList.SetDescriptorHeaps(1, new DescriptorHeap[] { shaderRenderViewHeap });
-            //commandList.SetGraphicsRootDescriptorTable(0, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
-
             commandList.SetViewport(viewport);
             commandList.SetScissorRectangles(scissorRect);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.Present, ResourceStates.RenderTarget);
             var rtvHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             rtvHandle += frameIndex * rtvDescriptorSize;
-
-
+            
+            
             commandList.ClearDepthStencilView(handleDSV, ClearFlags.FlagsDepth, 1.0f, 0);
             commandList.ClearRenderTargetView(rtvHandle, new Color4(0, 0.2F, 0.4f, 1), 0, null);
             commandList.SetRenderTargets(1, rtvHandle, false, handleDSV);
 
-            commandList.SetGraphicsRootSignature(rootSignature);
-            DescriptorHeap[] descHeaps = new[] { shaderRenderViewHeap, constantBufferViewHeap, samplerViewHeap };
-            commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
+            DescriptorHeap[] descHeaps = new[] { samplerViewHeap, shaderRenderViewHeap }; // shaderRenderViewHeap, 
+            commandList.SetDescriptorHeaps(2, descHeaps);
             commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
-            commandList.SetGraphicsRootDescriptorTable(1, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
+            //commandList.SetGraphicsRootDescriptorTable(1, constantBufferViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.SetGraphicsRootDescriptorTable(2, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
+            commandList.SetGraphicsRoot32BitConstants(1, 16, RootConstantsPointer, 0);
+
 
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
             commandList.SetVertexBuffer(0, vertexBufferView);
             commandList.SetIndexBuffer(indexBufferView);
             commandList.DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
 
-            //var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
-            //commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + srvCbvStep);
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + srvCbvStep);
             commandList.SetVertexBuffer(0, vertexBufferView2);
             commandList.SetIndexBuffer(indexBufferView2);
             commandList.DrawIndexedInstanced(IndexCount2, 1, 0, 0, 0);
-            //commandList.DrawInstanced(3, 1, 0, 0);
+            commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
@@ -604,6 +581,7 @@ namespace ModelRender
             frameIndex = swapChain.CurrentBackBufferIndex;
         }
 
+        Matrix p = Matrix.Identity;
         public void Update()
         {
             View = Matrix.LookAtLH(
@@ -631,7 +609,7 @@ namespace ModelRender
             constantBufferData.Project = (World * View) * Project;
 
             //
-
+            Utilities.Write(RootConstantsPointer, ref constantBufferData);
 
             Utilities.Write(constantBufferPointer, ref constantBufferData);
             Count++;
