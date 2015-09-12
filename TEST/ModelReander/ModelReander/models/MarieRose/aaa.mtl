@@ -12,8 +12,8 @@ newmtl Model001_Material001
 	Kd 1.0000 1.0000 1.0000
 	Ks 0.0000 0.0000 0.0000
 	Ke 0.0000 0.0000 0.0000
-	map_Ka marie_hair_head_base.tga
-	map_Kd marie_hair_head_base.tga
+	map_Ka marie_hair_head_base.dds
+	map_Kd marie_hair_head_base.dds
 
 newmtl Material__32
 	Ns 10.0000
