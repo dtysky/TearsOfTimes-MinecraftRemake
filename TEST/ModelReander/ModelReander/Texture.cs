@@ -19,9 +19,11 @@ namespace ModelRender
             Height = image.Height;
             Depth = image.Depth;
             PixelWdith = image.BytesPerPixel;
-            if (Path.GetExtension(filePath) == "dds")
+            if (Path.GetExtension(filePath) == ".dds")
             {
-                Data = Utilities.ReadStream(new FileStream(filePath, FileMode.Open));
+                var fileStream = new FileStream(filePath, FileMode.Open);
+                Data = Utilities.ReadStream(fileStream);
+                fileStream.Close();
             }
             else
             {
@@ -43,8 +45,13 @@ namespace ModelRender
         static public Texture LoadFromFile(string filePath)
         {      
             ImageImporter importer = new ImageImporter();
-            Image image = importer.LoadImage(filePath);
-            return new Texture(image, filePath);
+            string fp = filePath;
+            if (filePath.IndexOf("*") > 0)
+            {
+                fp = filePath.Substring(0, filePath.IndexOf("*"));
+            }
+            Image image = importer.LoadImage(fp);
+            return new Texture(image, fp);
         }
     }
 }

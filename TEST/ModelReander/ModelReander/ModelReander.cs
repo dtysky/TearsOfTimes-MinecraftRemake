@@ -267,7 +267,8 @@ namespace ModelRender
             commandList.Close();
 
             //model test
-            Model model = Model.LoadFromFile("../../models/MarieRose/aaa.obj");
+            var modePath = "../../models/MikuDeepSea/";
+            Model model = Model.LoadFromFile(modePath + "DeepSeaGirl.x");
 
             Vertex[] triangleVertices;
             int[] triangleIndexes;
@@ -311,13 +312,13 @@ namespace ModelRender
                 Utilities.Write(indexBuffer.Map(0), triangleIndexes, 0, triangleIndexes.Length);
                 indexBuffer.Unmap(0);
 
-                if (m.Material.HasTextureAmbient)
+                if (m.Material.HasTextureDiffuse)
                 {
-                    tex = Texture.LoadFromFile("../../models/MarieRose/" + m.Material.TextureAmbient.FilePath);
+                    tex = Texture.LoadFromFile(modePath + m.Material.TextureDiffuse.FilePath);
                 }
                 else
                 {
-                    tex = Texture.LoadFromFile("../../models/MarieRose/ss_body_base.dds");
+                    tex = Texture.LoadFromFile(modePath + "tga/skin.png");
                 }
                 textureData = tex.Data;
                 textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
@@ -375,9 +376,6 @@ namespace ModelRender
 
                 viewStep += device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             }
-
-            //==============
-            textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/ss_body_base.dds", FileMode.Open));
             
             //===========
 
@@ -548,7 +546,7 @@ namespace ModelRender
 
             //
             World = Matrix.RotationY(Count * 0.02f);
-            World *= Matrix.Scaling(100f);
+            World *= Matrix.Scaling(60f);
 
             constantBufferData.Project = (World * View) * Project;
 
