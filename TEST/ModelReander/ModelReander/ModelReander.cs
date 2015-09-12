@@ -140,7 +140,7 @@ namespace ModelRender
 
             var srvCbvHeapDesc = new DescriptorHeapDescription()
             {
-                DescriptorCount = 3,
+                DescriptorCount = 1,
                 Flags = DescriptorHeapFlags.ShaderVisible,
                 Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
             };
@@ -183,20 +183,15 @@ namespace ModelRender
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ShaderResourceView,
-                                DescriptorCount = 2,
-                                OffsetInDescriptorsFromTableStart = -1,
+                                DescriptorCount = 1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue,
                                 BaseShaderRegister = 0
-                            }
-                            
-                        }),
-                    new RootParameter(ShaderVisibility.All, 
-                        new[]
-                        {
+                            },
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ConstantBufferView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = -1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue + 1,
                                 BaseShaderRegister = 0
                             }
                         }),
@@ -205,7 +200,7 @@ namespace ModelRender
                         {
                             RangeType = DescriptorRangeType.Sampler,
                             DescriptorCount = 1,
-                            OffsetInDescriptorsFromTableStart = -1,
+                            OffsetInDescriptorsFromTableStart = int.MinValue,
                             BaseShaderRegister = 0
                         }),
                 });
@@ -469,7 +464,8 @@ namespace ModelRender
                 BufferLocation = constantBuffer.GPUVirtualAddress,
                 SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
-            device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + 2*srvCbvStep);
+            srvCbvStep += device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+            device.CreateConstantBufferView(cbDesc, srvCbvHeap.CPUDescriptorHandleForHeapStart + srvCbvStep);
 
             constantBufferData = new ConstantBufferData
             {
@@ -553,8 +549,6 @@ namespace ModelRender
             commandList.ClearRenderTargetView(rtvHandle, new Color4(0, 0.2F, 0.4f, 1), 0, null);
             commandList.SetRenderTargets(1, rtvHandle, false, handleDSV);
 
-            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
-
             commandList.SetGraphicsRootSignature(rootSignature);
             DescriptorHeap[] descHeaps = new[] { srvCbvHeap, samplerViewHeap };
             commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
@@ -567,11 +561,12 @@ namespace ModelRender
             commandList.SetIndexBuffer(indexBufferView);
             commandList.DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
 
-            
+            var srvCbvStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             commandList.SetGraphicsRootDescriptorTable(0, srvCbvHeap.GPUDescriptorHandleForHeapStart + srvCbvStep);
             commandList.SetVertexBuffer(0, vertexBufferView2);
             commandList.SetIndexBuffer(indexBufferView2);
             commandList.DrawIndexedInstanced(IndexCount2, 1, 0, 0, 0);
+            //commandList.DrawInstanced(3, 1, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
