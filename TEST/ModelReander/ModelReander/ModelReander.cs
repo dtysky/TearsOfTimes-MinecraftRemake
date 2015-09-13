@@ -26,14 +26,29 @@ namespace ModelRender
             public Vector3 BiTangent;
             public Vector2 TexCoord;
         };
-
+        
+       struct Light
+        {
+            public LightSourceType Type;
+            public Vector4 Diffuse;
+            public Vector4 Specular;
+            public Vector4 Ambient;
+            public Vector3 Position;
+            public Vector3 Direction;
+            public Vector3 Attenuation;
+            public float Range;
+            public float Palloff;
+            public float Theta;
+            public float Phi;
+        }
+        
+        
         struct ConstantBufferData
         {
             public Matrix Wrold;
-            public Matrix WorldViewProject;
-            public Vector4 LightDirection;
-            public Vector4 ViewDirection;
-            public Vector4 Bias;
+            public Matrix View;
+            public Matrix Project;
+            public Light Light;
         };
 
         private struct BufferView
@@ -61,22 +76,17 @@ namespace ModelRender
         private GraphicsCommandList commandList;
         private int rtvDescriptorSize;
         private DescriptorHeap shaderRenderViewHeap;
-        private DescriptorHeap constantBufferViewHeap;
 
         //App resources
         Resource vertexBuffer;
         Resource indexBuffer;
         Resource depthBuffer;
         Resource texture;
-        VertexBufferView vertexBufferView;
-        IndexBufferView indexBufferView;
         Resource constantBuffer;
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
 
         List<BufferView> bufferViews;
-
-        IntPtr RootConstantsPointer = Utilities.AllocateMemory(4 * 4 * 4);
 
         //Synchronization objetcs.
         private int frameIndex;
@@ -154,16 +164,6 @@ namespace ModelRender
 
             shaderRenderViewHeap = device.CreateDescriptorHeap(srvHeapDesc);
 
-            var cbvHeapDesc = new DescriptorHeapDescription()
-            {
-                DescriptorCount = 1,
-                Flags = DescriptorHeapFlags.ShaderVisible,
-                Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
-            };
-
-            constantBufferViewHeap = device.CreateDescriptorHeap(cbvHeapDesc);
-
-
             var rtcHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             for (int n = 0; n < FrameCount; n++)
             {
@@ -210,16 +210,18 @@ namespace ModelRender
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ShaderResourceView,
-                                DescriptorCount = 2,
+                                DescriptorCount = 1,
                                 OffsetInDescriptorsFromTableStart = int.MinValue,
                                 BaseShaderRegister = 0
+                            },
+                            new DescriptorRange()
+                            {
+                                RangeType = DescriptorRangeType.ShaderResourceView,
+                                DescriptorCount = 1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                BaseShaderRegister = 1
                             }
                         }),
-                    //new RootParameter(ShaderVisibility.All,new RootConstants()
-                    //{
-                    //    ShaderRegister = 0,
-                    //    Value32BitCount = 44
-                    //}),
                     new RootParameter(ShaderVisibility.Pixel,
                         new DescriptorRange()
                         {
@@ -297,16 +299,13 @@ namespace ModelRender
                 BufferLocation = constantBuffer.GPUVirtualAddress,
                 SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
             };
-            //device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
             device.CreateConstantBufferView(cbDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart);
 
             constantBufferData = new ConstantBufferData
             {
                 Wrold = Matrix.Identity,
-                WorldViewProject = Matrix.Identity,
-                LightDirection = Vector4.One,
-                ViewDirection = Vector4.One,
-                Bias = Vector4.One
+                View = Matrix.Identity,
+                Project = Matrix.Identity
             };
 
             constantBufferPointer = constantBuffer.Map(0);
@@ -318,7 +317,7 @@ namespace ModelRender
 
             Vertex[] triangleVertices;
             int[] triangleIndexes;
-            Texture tex;
+            List<Texture> texs;
             byte[] textureData;
             GCHandle handle;
             IntPtr ptr;
@@ -364,12 +363,14 @@ namespace ModelRender
 
                 if (m.Material.HasTextureDiffuse)
                 {
-                    tex = Texture.LoadFromFile(modePath + m.Material.TextureDiffuse.FilePath);
+                    texs = Texture.LoadFromFile(modePath, m.Material.TextureDiffuse.FilePath);
                 }
                 else
                 {
-                    tex = Texture.LoadFromFile(modePath + "tga/skin.png");
+                    texs = Texture.LoadFromFile(modePath, "tga/skin.png");
                 }
+
+                
                 textureData = tex.Data;
                 textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
                 // Create the texture.
@@ -381,8 +382,7 @@ namespace ModelRender
                     ResourceStates.GenericRead, null);
 
                 // Copy data to the intermediate upload heap and then schedule a copy 
-                // from the upload heap to the Texture2D.
-                //byte[] textureData = Utilities.ReadStream(new FileStream("../../models/MarieRose/Kok_Bikini_d.dds", FileMode.Open));           
+                // from the upload heap to the Texture2D.          
 
                 handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
                 ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
@@ -517,15 +517,14 @@ namespace ModelRender
             DescriptorHeap[] descHeaps = new[] { samplerViewHeap, shaderRenderViewHeap }; // shaderRenderViewHeap, 
             commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
             commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
-            commandList.SetGraphicsRootDescriptorTable(3, samplerViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(2, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
-            //commandList.SetGraphicsRoot32BitConstants(1, 44, RootConstantsPointer, 0);
 
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
             foreach (BufferView b in bufferViews)
             {
-                commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
+                commandList.SetGraphicsRootDescriptorTable(1, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
                 commandList.SetVertexBuffer(0, b.vertexBufferView);
                 commandList.SetIndexBuffer(b.indexBufferView);
                 commandList.DrawIndexedInstanced(b.IndexCount, 1, 0, 0, 0);
@@ -582,14 +581,21 @@ namespace ModelRender
             World *= Matrix.Scaling(60f);
 
             constantBufferData.Wrold = World;
-            constantBufferData.WorldViewProject = (World * View) * Project;
-            Vector3 lightDirection = new Vector3(0.5f, 0, -1);
-            lightDirection.Normalize();
-            constantBufferData.LightDirection = new Vector4(lightDirection, 1f);
-            constantBufferData.ViewDirection = new Vector4(from - to, 1f);
-            constantBufferData.Bias = new Vector4(0f, 0f, 0f, 0f);
+            constantBufferData.View = View;
+            constantBufferData.Project = Project;
+
+            constantBufferData.Light = new Light
+            {
+                Type = LightSourceType.Point,
+                Ambient = new Vector4(1f, 1f, 1f, 1f),
+                Diffuse = new Vector4(1f, 1f, 1f, 1f),
+                Specular = new Vector4(1f, 1f, 1f, 1f),
+                Position = new Vector3(-0.5f, -0.5f, -0.5f),
+                Range = 1000f,
+                Attenuation = new Vector3(1f, 0f, 0f)
+            };
+
             //
-            Utilities.Write(RootConstantsPointer, ref constantBufferData);
 
             Utilities.Write(constantBufferPointer, ref constantBufferData);
             Count++;
