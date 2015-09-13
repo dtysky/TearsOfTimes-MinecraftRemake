@@ -21,12 +21,19 @@ namespace ModelRender
         public struct Vertex
         {
             public Vector3 Position;
+            public Vector3 Normal;
+            public Vector3 Tangent;
+            public Vector3 BiTangent;
             public Vector2 TexCoord;
         };
 
         struct ConstantBufferData
         {
-            public Matrix Project;
+            public Matrix Wrold;
+            public Matrix WorldViewProject;
+            public Vector4 LightDirection;
+            public Vector4 ViewDirection;
+            public Vector4 Bias;
         };
 
         private struct BufferView
@@ -200,7 +207,7 @@ namespace ModelRender
                     new RootParameter(ShaderVisibility.All,new RootConstants()
                     {
                         ShaderRegister = 0,
-                        Value32BitCount = 16
+                        Value32BitCount = 44
                     }),
                     new RootParameter(ShaderVisibility.Pixel,
                         new DescriptorRange()
@@ -213,9 +220,10 @@ namespace ModelRender
                 });
 
             rootSignature = device.CreateRootSignature(0, rootSignatureDesc.Serialize());
-            
+
             // Create the pipeline state, which includes compiling and loading shaders.
 #if DEBUG
+            var warn = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
 #else
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "VSMain", "vs_5_0"));
@@ -230,8 +238,11 @@ namespace ModelRender
             // Define the vertex input layout.
             var inputElementDescs = new[]
             {
-                    new InputElement("POSITION",0,Format.R32G32B32_Float,0,0),
-                    new InputElement("TEXCOORD",0,Format.R32G32_Float,12,0)
+                    new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
+                    new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
+                    new InputElement("TANGENT", 0, Format.R32G32B32_Float, 24, 0),
+                    new InputElement("BITANGENT", 0, Format.R32G32B32_Float, 36, 0),
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 48, 0)
             };
 
             // Describe and create the graphics pipeline state object (PSO).
@@ -289,6 +300,9 @@ namespace ModelRender
                     {
                         v[i].Position = m.Vertices[i];
                         v[i].TexCoord = m.UV[i];
+                        v[i].Normal = m.Normals[i];
+                        //v[i].Tangent = m.Tangents[i];
+                        //v[i].BiTangent = m.BiTangents[i];
                     }
                     return v;
                 }))();
@@ -407,7 +421,11 @@ namespace ModelRender
 
             constantBufferData = new ConstantBufferData
             {
-                Project = Matrix.Identity
+                Wrold = Matrix.Identity,
+                WorldViewProject = Matrix.Identity,
+                LightDirection = Vector4.One,
+                ViewDirection = Vector4.One,
+                Bias = Vector4.One
             };
 
             constantBufferPointer = constantBuffer.Map(0);
@@ -488,7 +506,7 @@ namespace ModelRender
             commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.SetGraphicsRootDescriptorTable(2, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
-            commandList.SetGraphicsRoot32BitConstants(1, 16, RootConstantsPointer, 0);
+            commandList.SetGraphicsRoot32BitConstants(1, 44, RootConstantsPointer, 0);
 
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
@@ -526,11 +544,13 @@ namespace ModelRender
         Matrix p = Matrix.Identity;
         public void Update()
         {
+            Vector3 from = new Vector3(0.0f, 0.0f, -100.0f);
+            Vector3 to = new Vector3(0.0f, 50.0f, 0.0f);
             View = Matrix.LookAtLH(
                 //Position of camera
-                new Vector3(0.0f, 0.0f, -100.0f),
+                from,
                 //Viewpoint of camera
-                new Vector3(0.0f, 50.0f, 0.0f),
+                to,
                 //"Up"
                 new Vector3(0.0f, 1.0f, 0.0f));
 
@@ -548,8 +568,13 @@ namespace ModelRender
             World = Matrix.RotationY(Count * 0.02f);
             World *= Matrix.Scaling(60f);
 
-            constantBufferData.Project = (World * View) * Project;
-
+            constantBufferData.Wrold = World;
+            constantBufferData.WorldViewProject = (World * View) * Project;
+            Vector3 lightDirection = new Vector3(0.5f, 0, -1);
+            lightDirection.Normalize();
+            constantBufferData.LightDirection = new Vector4(lightDirection, 1f);
+            constantBufferData.ViewDirection = new Vector4(from - to, 1f);
+            constantBufferData.Bias = new Vector4(0f, 0f, 0f, 0f);
             //
             Utilities.Write(RootConstantsPointer, ref constantBufferData);
 

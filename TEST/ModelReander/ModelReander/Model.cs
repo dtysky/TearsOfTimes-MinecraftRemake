@@ -31,6 +31,9 @@ namespace ModelRender
                     mesh.Vertices, 
                     mesh.GetIndices(), 
                     mesh.TextureCoordinateChannels[0], 
+                    mesh.Normals,
+                    mesh.Tangents,
+                    mesh.BiTangents,
                     scene.Materials[mesh.MaterialIndex])
                     );
             }
@@ -41,20 +44,41 @@ namespace ModelRender
 
     class ModelComponent
     {
-        public ModelComponent(string name,List<Vector3D> vertices, int[] indices, List<Vector3D> uv, Material material)
+        public ModelComponent(string name,List<Vector3D> vertices, int[] indices, List<Vector3D> uv, List<Vector3D> normals, List<Vector3D> tangents, List<Vector3D> bitangents, Material material)
         {
             Vertices = new Vector3[vertices.Count];
-            for(int i=0; i<vertices.Count; i++)
+            for(int i = 0; i < vertices.Count; i++)
             {
                 Vertices[i].X = vertices[i].X;
                 Vertices[i].Y = vertices[i].Y;
                 Vertices[i].Z = vertices[i].Z;
             }
             UV = new Vector2[uv.Count];
-            for(int i=0; i<uv.Count; i++)
+            for(int i = 0; i < uv.Count; i++)
             {
                 UV[i].X = uv[i].X;
                 UV[i].Y = uv[i].Y;
+            }
+            Normals = new Vector3[normals.Count];
+            for (int i = 0; i < normals.Count; i++)
+            {
+                Normals[i].X = normals[i].X;
+                Normals[i].Y = normals[i].Y;
+                Normals[i].Z = normals[i].Z;
+            }
+            Tangents = new Vector3[tangents.Count];
+            for (int i = 0; i < tangents.Count; i++)
+            {
+                Tangents[i].X = tangents[i].X;
+                Tangents[i].Y = tangents[i].Y;
+                Tangents[i].Z = tangents[i].Z;
+            }
+            BiTangents = new Vector3[bitangents.Count];
+            for (int i = 0; i < bitangents.Count; i++)
+            {
+                BiTangents[i].X = bitangents[i].X;
+                BiTangents[i].Y = bitangents[i].Y;
+                BiTangents[i].Z = bitangents[i].Z;
             }
             Indices = indices;
             Material = material;
@@ -64,6 +88,9 @@ namespace ModelRender
         public Vector3[] Vertices { get; }
         public int[] Indices { get; }
         public Vector2[] UV { get; }
+        public Vector3[] Normals { get; }
+        public Vector3[] Tangents { get; }
+        public Vector3[] BiTangents { get; }
         public Material Material { get; }
 
         public Matrix MatrixProject { get; }

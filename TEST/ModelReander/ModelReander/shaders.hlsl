@@ -1,28 +1,45 @@
+struct VSInput
+{
+	float4 position : POSITION;
+	float3 normal : NORMAL;
+	float3 tangent: TANGENT;
+	float3 bitangent : BITANGENT;
+	float2 texcoord : TEXCOORD;
+};
+
 struct PSInput
 {
 	float4 position : SV_POSITION;
-	float2 uv : TEXCOORD;
+	float3 normal : NORMAL;
+	float2 texcoord : TEXCOORD;
 };
 
 struct GSInput
 {
 	float4 position : SV_POSITION;
-	float2 uv : TEXCOORD;
+	float2 texcoord : TEXCOORD;
 };
 
 cbuffer ConstantBufferData : register(b0)
 {
-	float4x4 project;
+	float4x4 world;
+	float4x4 worldViewProj;
+	float4 lightDirection;
+	float4 viewDirection;
+	float bias;
 };
 
 Texture2D g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 
-GSInput VSMain(float4 position : POSITION, float4 uv : TEXCOORD)
+PSInput VSMain(VSInput input)
 {
 	PSInput result;
-	result.position = mul(project, position);
-	result.uv = uv;
+
+	result.position = mul(worldViewProj, input.position);
+	result.normal = mul(world, input.normal);
+	result.texcoord = input.texcoord;
+
 	return result;
 
 }
@@ -52,6 +69,7 @@ GSInput VSMain(float4 position : POSITION, float4 uv : TEXCOORD)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	return g_texture.SampleLevel(g_sampler, input.uv, 0);
-	//return float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 D = g_texture.Sample(g_sampler, input.texcoord);
+
+	return saturate(dot(normalize(input.normal), lightDirection))*D + 0.2F;
 }
