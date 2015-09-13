@@ -193,6 +193,17 @@ namespace ModelRender
                 // Root Parameters
                 new[]
                 {
+                     new RootParameter(ShaderVisibility.All,
+                        new []
+                        {
+                            new DescriptorRange()
+                            {
+                                RangeType = DescriptorRangeType.ConstantBufferView,
+                                DescriptorCount = 1,
+                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                BaseShaderRegister = 0
+                            }
+                        }),
                     new RootParameter(ShaderVisibility.All,
                         new []
                         {
@@ -204,11 +215,11 @@ namespace ModelRender
                                 BaseShaderRegister = 0
                             }
                         }),
-                    new RootParameter(ShaderVisibility.All,new RootConstants()
-                    {
-                        ShaderRegister = 0,
-                        Value32BitCount = 44
-                    }),
+                    //new RootParameter(ShaderVisibility.All,new RootConstants()
+                    //{
+                    //    ShaderRegister = 0,
+                    //    Value32BitCount = 44
+                    //}),
                     new RootParameter(ShaderVisibility.Pixel,
                         new DescriptorRange()
                         {
@@ -277,6 +288,30 @@ namespace ModelRender
             commandList = device.CreateCommandList(CommandListType.Direct, commandAllocator, pipelineState);
             commandList.Close();
 
+            // build constant buffer
+
+            constantBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
+
+            var cbDesc = new ConstantBufferViewDescription()
+            {
+                BufferLocation = constantBuffer.GPUVirtualAddress,
+                SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
+            };
+            //device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
+            device.CreateConstantBufferView(cbDesc, shaderRenderViewHeap.CPUDescriptorHandleForHeapStart);
+
+            constantBufferData = new ConstantBufferData
+            {
+                Wrold = Matrix.Identity,
+                WorldViewProject = Matrix.Identity,
+                LightDirection = Vector4.One,
+                ViewDirection = Vector4.One,
+                Bias = Vector4.One
+            };
+
+            constantBufferPointer = constantBuffer.Map(0);
+            Utilities.Write(constantBufferPointer, ref constantBufferData);
+
             //model test
             var modePath = "../../models/MikuDeepSea/";
             Model model = Model.LoadFromFile(modePath + "DeepSeaGirl.x");
@@ -288,7 +323,8 @@ namespace ModelRender
             GCHandle handle;
             IntPtr ptr;
             ResourceDescription textureDesc;
-            int viewStep = 0;
+            //int viewStep = 0;
+            int viewStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             bufferViews = new List<BufferView>();
 
             foreach (ModelComponent m in model.Components)
@@ -408,29 +444,6 @@ namespace ModelRender
 
             device.CreateSampler(samplerDesc, samplerViewHeap.CPUDescriptorHandleForHeapStart);
 
-            // build constant buffer
-
-            constantBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
-
-            var cbDesc = new ConstantBufferViewDescription()
-            {
-                BufferLocation = constantBuffer.GPUVirtualAddress,
-                SizeInBytes = (Utilities.SizeOf<ConstantBufferData>() + 255) & ~255
-            };
-            device.CreateConstantBufferView(cbDesc, constantBufferViewHeap.CPUDescriptorHandleForHeapStart);
-
-            constantBufferData = new ConstantBufferData
-            {
-                Wrold = Matrix.Identity,
-                WorldViewProject = Matrix.Identity,
-                LightDirection = Vector4.One,
-                ViewDirection = Vector4.One,
-                Bias = Vector4.One
-            };
-
-            constantBufferPointer = constantBuffer.Map(0);
-            Utilities.Write(constantBufferPointer, ref constantBufferData);
-
             // build depth buffer
 
             DescriptorHeapDescription descDescriptorHeapDSB = new DescriptorHeapDescription()
@@ -502,11 +515,11 @@ namespace ModelRender
             commandList.SetRenderTargets(1, rtvHandle, false, handleDSV);
 
             DescriptorHeap[] descHeaps = new[] { samplerViewHeap, shaderRenderViewHeap }; // shaderRenderViewHeap, 
-            commandList.SetDescriptorHeaps(2, descHeaps);
+            commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
             commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
-            commandList.SetGraphicsRootDescriptorTable(2, samplerViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(3, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
-            commandList.SetGraphicsRoot32BitConstants(1, 44, RootConstantsPointer, 0);
+            //commandList.SetGraphicsRoot32BitConstants(1, 44, RootConstantsPointer, 0);
 
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
