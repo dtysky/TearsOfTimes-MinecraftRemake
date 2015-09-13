@@ -339,7 +339,7 @@ namespace ModelRender
                     texs = Texture.LoadFromFile(modePath, "tga/skin.png");
                 }
 
-                int texsCount = 1;
+                int texsCount = 0;
                 foreach (Texture tex in texs)
                 {
                     textureData = tex.Data;
@@ -370,10 +370,10 @@ namespace ModelRender
                             Dimension = ShaderResourceViewDimension.Texture2D,
                             Texture2D =
                             {
-                            MipLevels = 1,
-                            MostDetailedMip = 0,
-                            PlaneSlice = 0,
-                            ResourceMinLODClamp = 0.0f
+                                MipLevels = 1,
+                                MostDetailedMip = 0,
+                                PlaneSlice = 0,
+                                ResourceMinLODClamp = 0.0f
                             }
                         },
                         shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + viewStep + texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));

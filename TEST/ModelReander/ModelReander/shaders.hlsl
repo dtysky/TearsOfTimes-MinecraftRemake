@@ -13,7 +13,7 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 texcoord : TEXCOORD;
-	float texsCount : SV_IsFrontFace;
+	float texsCount : PSIZE;
 };
 
 struct GSInput
@@ -91,14 +91,16 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 1);
 	float4 D;
-	if (input.texsCount == 1.0f)
-	{
-		D = g_texture.Sample(g_sampler, input.texcoord);
-	}
-	else
-	{
-		D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
-	}
+	//if (input.texsCount == 1.0f)
+	//{
+	//	D = g_texture.Sample(g_sampler, input.texcoord);
+	//}
+	//else
+	//{
+	//	D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+	//}
+	D = g_texture.Sample(g_sampler, input.texcoord);
+	//D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
 	float distance = length(lightDirection.xyz) / 2000;
 	lightDirection = normalize(lightDirection);
 
