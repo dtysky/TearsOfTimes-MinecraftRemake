@@ -42,16 +42,20 @@ namespace ModelRender
         public byte[] Data { get; }
 
 
-        static public Texture LoadFromFile(string filePath)
-        {      
+        static public List<Texture> LoadFromFile(string rootPath ,string filePath)
+        {   
             ImageImporter importer = new ImageImporter();
-            string fp = filePath;
-            if (filePath.IndexOf("*") > 0)
+            Image image;
+            List<Texture> textures = new List<Texture>();
+            string[] fps = filePath.Split('*');
+            string fp;
+            for (int i = 0; i < fps.Length; i++)
             {
-                fp = filePath.Substring(0, filePath.IndexOf("*"));
+                fp = rootPath + fps[i];
+                image = importer.LoadImage(fp);
+                textures.Add(new Texture(image, fp));
             }
-            Image image = importer.LoadImage(fp);
-            return new Texture(image, fp);
+            return textures;
         }
     }
 }

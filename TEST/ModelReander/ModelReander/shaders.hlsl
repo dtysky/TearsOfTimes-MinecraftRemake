@@ -20,13 +20,27 @@ struct GSInput
 	float2 texcoord : TEXCOORD;
 };
 
+struct Light
+{
+	int type;
+	float4 diffuse;
+	float4 specular;
+	float4 ambient;
+	float3 position;
+	float3 direction;
+	float3 attenuation;
+	float range;
+	float palloff;
+	float theta;
+	float phi;
+};
+
 cbuffer ConstantBufferData : register(b0)
 {
-	float4x4 world;
-	float4x4 worldViewProj;
-	float4 lightDirection;
-	float4 viewDirection;
-	float bias;
+	matrix world;
+	matrix view;
+	matrix project;
+	Light light;
 };
 
 Texture2D g_texture : register(t0);
@@ -36,7 +50,9 @@ PSInput VSMain(VSInput input)
 {
 	PSInput result;
 
-	result.position = mul(worldViewProj, input.position);
+	result.position = mul(world, input.position);
+	result.position = mul(view, result.position);
+	result.position = mul(project, result.position);
 	result.normal = mul(world, input.normal);
 	result.texcoord = input.texcoord;
 
@@ -69,7 +85,10 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
+	float4 lightDirection = input.position - float4(light.position, 1);
 	float4 D = g_texture.Sample(g_sampler, input.texcoord);
+	float distance = length(lightDirection.xyz) / 2000;
+	lightDirection = normalize(lightDirection);
 
-	return saturate(dot(normalize(input.normal), lightDirection))*D + 0.2F;
+	return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
 }
