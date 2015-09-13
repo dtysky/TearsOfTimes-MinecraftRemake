@@ -5,6 +5,7 @@ struct VSInput
 	float3 tangent: TANGENT;
 	float3 bitangent : BITANGENT;
 	float2 texcoord : TEXCOORD;
+	uint texsCount : BLENDINDICES;
 };
 
 struct PSInput
@@ -12,6 +13,7 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 texcoord : TEXCOORD;
+	float texsCount : SV_IsFrontFace;
 };
 
 struct GSInput
@@ -44,6 +46,7 @@ cbuffer ConstantBufferData : register(b0)
 };
 
 Texture2D g_texture : register(t0);
+Texture2D g_texture1 : register(t1);
 SamplerState g_sampler : register(s0);
 
 PSInput VSMain(VSInput input)
@@ -55,6 +58,7 @@ PSInput VSMain(VSInput input)
 	result.position = mul(project, result.position);
 	result.normal = mul(world, input.normal);
 	result.texcoord = input.texcoord;
+	result.texsCount = float(input.texsCount);
 
 	return result;
 
@@ -86,7 +90,15 @@ PSInput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 1);
-	float4 D = g_texture.Sample(g_sampler, input.texcoord);
+	float4 D;
+	if (input.texsCount == 1.0f)
+	{
+		D = g_texture.Sample(g_sampler, input.texcoord);
+	}
+	else
+	{
+		D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+	}
 	float distance = length(lightDirection.xyz) / 2000;
 	lightDirection = normalize(lightDirection);
 

@@ -25,6 +25,7 @@ namespace ModelRender
             public Vector3 Tangent;
             public Vector3 BiTangent;
             public Vector2 TexCoord;
+            public uint TexsCount;
         };
         
        struct Light
@@ -255,7 +256,8 @@ namespace ModelRender
                     new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
                     new InputElement("TANGENT", 0, Format.R32G32B32_Float, 24, 0),
                     new InputElement("BITANGENT", 0, Format.R32G32B32_Float, 36, 0),
-                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 48, 0)
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 48, 0),
+                    new InputElement("BLENDINDICES", 0, Format.R32G32_Float, 56, 0)
             };
 
             // Describe and create the graphics pipeline state object (PSO).
@@ -328,6 +330,57 @@ namespace ModelRender
 
             foreach (ModelComponent m in model.Components)
             {
+                if (m.Material.HasTextureDiffuse)
+                {
+                    texs = Texture.LoadFromFile(modePath, m.Material.TextureDiffuse.FilePath);
+                }
+                else
+                {
+                    texs = Texture.LoadFromFile(modePath, "tga/skin.png");
+                }
+
+                int texsCount = 1;
+                foreach (Texture tex in texs)
+                {
+                    textureData = tex.Data;
+                    textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
+                    // Create the texture.
+                    // Describe and create a Texture2D.
+                    texture = device.CreateCommittedResource(
+                        new HeapProperties(HeapType.Upload),
+                        HeapFlags.None,
+                        textureDesc,
+                        ResourceStates.GenericRead, null);
+
+                    // Copy data to the intermediate upload heap and then schedule a copy 
+                    // from the upload heap to the Texture2D.          
+
+                    handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
+                    ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
+                    texture.WriteToSubresource(0, null, ptr, tex.Width * tex.PixelWdith, textureData.Length);
+                    handle.Free();
+
+                    // Describe and create a SRV for the texture.
+                    device.CreateShaderResourceView(
+                        texture,
+                        new ShaderResourceViewDescription
+                        {
+                            Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
+                            Format = textureDesc.Format,
+                            Dimension = ShaderResourceViewDimension.Texture2D,
+                            Texture2D =
+                            {
+                            MipLevels = 1,
+                            MostDetailedMip = 0,
+                            PlaneSlice = 0,
+                            ResourceMinLODClamp = 0.0f
+                            }
+                        },
+                        shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + viewStep + texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));
+
+                    texsCount++;
+                }
+
                 triangleVertices = (new Func<Vertex[]>(() =>
                 {
                     var v = new Vertex[m.Vertices.Length];
@@ -338,6 +391,7 @@ namespace ModelRender
                         v[i].Normal = m.Normals[i];
                         //v[i].Tangent = m.Tangents[i];
                         //v[i].BiTangent = m.BiTangents[i];
+                        v[i].TexsCount = (uint)texsCount;
                     }
                     return v;
                 }))();
@@ -361,51 +415,6 @@ namespace ModelRender
                 Utilities.Write(indexBuffer.Map(0), triangleIndexes, 0, triangleIndexes.Length);
                 indexBuffer.Unmap(0);
 
-                if (m.Material.HasTextureDiffuse)
-                {
-                    texs = Texture.LoadFromFile(modePath, m.Material.TextureDiffuse.FilePath);
-                }
-                else
-                {
-                    texs = Texture.LoadFromFile(modePath, "tga/skin.png");
-                }
-
-                
-                textureData = tex.Data;
-                textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
-                // Create the texture.
-                // Describe and create a Texture2D.
-                texture = device.CreateCommittedResource(
-                    new HeapProperties(HeapType.Upload),
-                    HeapFlags.None,
-                    textureDesc,
-                    ResourceStates.GenericRead, null);
-
-                // Copy data to the intermediate upload heap and then schedule a copy 
-                // from the upload heap to the Texture2D.          
-
-                handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
-                ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
-                texture.WriteToSubresource(0, null, ptr, tex.Width * tex.PixelWdith, textureData.Length);
-                handle.Free();
-
-                // Describe and create a SRV for the texture.
-                device.CreateShaderResourceView(
-                    texture,
-                    new ShaderResourceViewDescription
-                    {
-                        Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
-                        Format = textureDesc.Format,
-                        Dimension = ShaderResourceViewDimension.Texture2D,
-                        Texture2D =
-                        {
-                            MipLevels = 1,
-                            MostDetailedMip = 0,
-                            PlaneSlice = 0,
-                            ResourceMinLODClamp = 0.0f
-                        }},
-                    shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + viewStep);
-
                 bufferViews.Add(new BufferView()
                 {
                     vertexBufferView = new VertexBufferView()
@@ -424,7 +433,7 @@ namespace ModelRender
                     ViewStep = viewStep
                 });
 
-                viewStep += device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+                viewStep += texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             }
             
             //===========
