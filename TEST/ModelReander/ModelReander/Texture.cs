@@ -15,7 +15,7 @@ namespace ModelRender
         private Texture(Image image, string filePath)
         {
             Image = image;
-            image.ConvertToDxtc(CompressedDataFormat.DXT5);
+            //image.ConvertToDxtc(CompressedDataFormat.DXT5);
             Width = image.Width;
             Height = image.Height;
             Depth = image.Depth;
@@ -45,16 +45,8 @@ namespace ModelRender
                 ColorFormat = Format.R16G16B16A16_UNorm;
             }
 
-            if (Path.GetExtension(filePath) == ".dds")
-            {
-                var fileStream = new FileStream(filePath, FileMode.Open);
-                Data = Utilities.ReadStream(fileStream);
-                fileStream.Close();
-            }
-            else
-            {
-                Data = image.GetImageData(0).Data;
-            }
+            Data = image.GetImageData(0).Data;
+
         }
 
         private Image Image;
@@ -70,6 +62,7 @@ namespace ModelRender
         static public List<Texture> LoadFromFile(string rootPath ,string filePath)
         {   
             ImageImporter importer = new ImageImporter();
+            ImageExporter exporter = new ImageExporter();
             Image image;
             List<Texture> textures = new List<Texture>();
             string[] fps = filePath.Split('*');
@@ -78,6 +71,14 @@ namespace ModelRender
             {
                 fp = rootPath + fps[i];
                 image = importer.LoadImage(fp);
+                
+                if (Path.GetExtension(fp) != ".tga")
+                {
+                    if (!File.Exists(fp.Replace(Path.GetExtension(fp), ".tga")))
+                        exporter.SaveImage(image, ImageType.Tga, fp.Replace(Path.GetExtension(fp),".tga"));                   
+                    image = importer.LoadImage(fp.Replace(Path.GetExtension(fp), ".tga"));
+                }
+
                 textures.Add(new Texture(image, fp));
             }
             return textures;
