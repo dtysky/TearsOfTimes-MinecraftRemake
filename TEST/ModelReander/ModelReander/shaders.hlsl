@@ -5,7 +5,6 @@ struct VSInput
 	float3 tangent: TANGENT;
 	float3 bitangent : BITANGENT;
 	float2 texcoord : TEXCOORD;
-	uint texsCount : BLENDINDICES;
 };
 
 struct PSInput
@@ -13,7 +12,6 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 texcoord : TEXCOORD;
-	float texsCount : PSIZE;
 };
 
 struct GSInput
@@ -42,6 +40,7 @@ cbuffer ConstantBufferData : register(b0)
 	matrix world;
 	matrix view;
 	matrix project;
+	int texsCount;
 	Light light;
 };
 
@@ -58,7 +57,6 @@ PSInput VSMain(VSInput input)
 	result.position = mul(project, result.position);
 	result.normal = mul(world, input.normal);
 	result.texcoord = input.texcoord;
-	result.texsCount = float(input.texsCount);
 
 	return result;
 
@@ -91,18 +89,19 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 1);
 	float4 D;
-	//if (input.texsCount == 1.0f)
-	//{
-	//	D = g_texture.Sample(g_sampler, input.texcoord);
-	//}
-	//else
-	//{
-	//	D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
-	//}
-	D = g_texture.Sample(g_sampler, input.texcoord);
+	if (texsCount == 1)
+	{
+		D = g_texture.Sample(g_sampler, input.texcoord);
+	}
+	else
+	{
+		D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+	}
 	//D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+	//D = g_texture.Sample(g_sampler, input.texcoord);
 	float distance = length(lightDirection.xyz) / 2000;
 	lightDirection = normalize(lightDirection);
 
-	return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
+	//return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
+	return D;
 }

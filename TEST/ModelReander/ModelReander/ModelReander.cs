@@ -25,7 +25,6 @@ namespace ModelRender
             public Vector3 Tangent;
             public Vector3 BiTangent;
             public Vector2 TexCoord;
-            public uint TexsCount;
         };
         
        struct Light
@@ -49,6 +48,7 @@ namespace ModelRender
             public Matrix Wrold;
             public Matrix View;
             public Matrix Project;
+            public int TexsCount;
             public Light Light;
         };
 
@@ -58,6 +58,7 @@ namespace ModelRender
             public IndexBufferView indexBufferView;
             public int IndexCount;
             public int ViewStep;
+            public int TexsCount;
         }
 
         const int FrameCount = 2;
@@ -212,14 +213,14 @@ namespace ModelRender
                             {
                                 RangeType = DescriptorRangeType.ShaderResourceView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                OffsetInDescriptorsFromTableStart = -1,
                                 BaseShaderRegister = 0
                             },
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ShaderResourceView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                OffsetInDescriptorsFromTableStart = -1,
                                 BaseShaderRegister = 1
                             }
                         }),
@@ -256,8 +257,7 @@ namespace ModelRender
                     new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
                     new InputElement("TANGENT", 0, Format.R32G32B32_Float, 24, 0),
                     new InputElement("BITANGENT", 0, Format.R32G32B32_Float, 36, 0),
-                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 48, 0),
-                    new InputElement("BLENDINDICES", 0, Format.R32G32_Float, 56, 0)
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 48, 0)
             };
 
             // Describe and create the graphics pipeline state object (PSO).
@@ -327,7 +327,7 @@ namespace ModelRender
             //int viewStep = 0;
             int viewStep = device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
             bufferViews = new List<BufferView>();
-
+            
             foreach (ModelComponent m in model.Components)
             {
                 if (m.Material.HasTextureDiffuse)
@@ -336,14 +336,15 @@ namespace ModelRender
                 }
                 else
                 {
-                    texs = Texture.LoadFromFile(modePath, "tga/skin.png");
+                    //continue;
+                    texs = Texture.LoadFromFile(modePath, "tex/jacket.png");
                 }
 
                 int texsCount = 0;
                 foreach (Texture tex in texs)
                 {
                     textureData = tex.Data;
-                    textureDesc = ResourceDescription.Texture2D(Format.B8G8R8A8_UNorm, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
+                    textureDesc = ResourceDescription.Texture2D(tex.ColorFormat, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
                     // Create the texture.
                     // Describe and create a Texture2D.
                     texture = device.CreateCommittedResource(
@@ -391,7 +392,6 @@ namespace ModelRender
                         v[i].Normal = m.Normals[i];
                         //v[i].Tangent = m.Tangents[i];
                         //v[i].BiTangent = m.BiTangents[i];
-                        v[i].TexsCount = (uint)texsCount;
                     }
                     return v;
                 }))();
@@ -430,7 +430,8 @@ namespace ModelRender
                         Format = Format.R32_UInt
                     },
                     IndexCount = triangleIndexes.Length,
-                    ViewStep = viewStep
+                    ViewStep = viewStep,
+                    TexsCount = texsCount
                 });
 
                 viewStep += texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
@@ -533,6 +534,8 @@ namespace ModelRender
 
             foreach (BufferView b in bufferViews)
             {
+                constantBufferData.TexsCount = b.TexsCount;
+                Utilities.Write(constantBufferPointer, ref constantBufferData);
                 commandList.SetGraphicsRootDescriptorTable(1, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
                 commandList.SetVertexBuffer(0, b.vertexBufferView);
                 commandList.SetIndexBuffer(b.indexBufferView);
@@ -565,8 +568,8 @@ namespace ModelRender
         Matrix p = Matrix.Identity;
         public void Update()
         {
-            Vector3 from = new Vector3(0.0f, 0.0f, -100.0f);
-            Vector3 to = new Vector3(0.0f, 50.0f, 0.0f);
+            Vector3 from = new Vector3(0.0f, 150.0f, -100.0f);
+            Vector3 to = new Vector3(0.0f, 150.0f, 0.0f);
             View = Matrix.LookAtLH(
                 //Position of camera
                 from,
@@ -587,7 +590,8 @@ namespace ModelRender
 
             //
             World = Matrix.RotationY(Count * 0.02f);
-            World *= Matrix.Scaling(60f);
+
+            World *= Matrix.Scaling(100f);
 
             constantBufferData.Wrold = World;
             constantBufferData.View = View;

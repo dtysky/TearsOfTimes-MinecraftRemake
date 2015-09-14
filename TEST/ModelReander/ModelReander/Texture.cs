@@ -9,6 +9,7 @@ namespace ModelRender
     using DevIL;
     using System.IO;
     using SharpDX;
+    using SharpDX.DXGI;
     class Texture
     {
         private Texture(Image image, string filePath)
@@ -19,6 +20,31 @@ namespace ModelRender
             Height = image.Height;
             Depth = image.Depth;
             PixelWdith = image.BytesPerPixel;
+
+            var imageFormat = image.Format;
+            var imageBitPerChannal = image.BitsPerPixel / image.ChannelCount;
+
+            if (imageFormat == DataFormat.BGR && imageBitPerChannal == 8)
+            {
+                ColorFormat = Format.B8G8R8X8_UNorm;
+            }
+            else if (imageFormat == DataFormat.BGRA && imageBitPerChannal == 8)
+            {
+                ColorFormat = Format.B8G8R8A8_UNorm;
+            }
+            else if (imageFormat == DataFormat.RGB && imageBitPerChannal == 8)
+            {
+                ColorFormat = Format.R8G8B8A8_UNorm;
+            }
+            else if (imageFormat == DataFormat.RGBA && imageBitPerChannal == 8)
+            {
+                ColorFormat = Format.R8G8B8A8_UNorm;
+            }
+            else if (imageFormat == DataFormat.RGBA && imageBitPerChannal == 16)
+            {
+                ColorFormat = Format.R16G16B16A16_UNorm;
+            }
+
             if (Path.GetExtension(filePath) == ".dds")
             {
                 var fileStream = new FileStream(filePath, FileMode.Open);
@@ -36,9 +62,8 @@ namespace ModelRender
         public int Width { get; }
         public int Height { get; }
         public int Depth { get; }
-
         public int PixelWdith { get; }
-
+        public Format ColorFormat { get; }
         public byte[] Data { get; }
 
 
