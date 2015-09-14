@@ -126,6 +126,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="LightHelper.hlsl" />
+    <Content Include="Lighting.hlsl" />
     <Content Include="shaders.hlsl" />
   </ItemGroup>
   <ItemGroup>

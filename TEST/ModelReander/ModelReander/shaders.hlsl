@@ -86,7 +86,7 @@ PSInput VSMain(VSInput input)
 //	}
 //}
 
-float4 PSMain(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
+float4 PSMain1(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 1);
 	float4 D;
@@ -102,9 +102,24 @@ float4 PSMain(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
 	//}
 	//D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
 	D = g_texture.Sample(g_sampler, input.texcoord);
-	float distance = length(lightDirection.xyz) / 3000;
+	float distance = length(lightDirection.xyz) / 1000;
 	lightDirection = normalize(lightDirection);
 
-	//return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
+	return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
 	return D;
+}
+
+float4 PSMain(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
+{
+	float4 lightDirection = input.position - float4(light.position, 0);
+	float4 diffuse = g_texture.Sample(g_sampler, input.texcoord);
+	float distance = length(lightDirection.xyz);
+	lightDirection = normalize(lightDirection);
+
+	float lightIntensity = dot(input.normal, -lightDirection);
+	float diffuseIntensity = 1.0;
+	return saturate((diffuseIntensity * lightIntensity) / (pow(distance,0.5))) * diffuse * 0.5 + diffuse * 0.5;
+
+	//return saturate( dot(normalize(input.normal), -lightDirection) )*diffuse / distance;
+	//return D;
 }
