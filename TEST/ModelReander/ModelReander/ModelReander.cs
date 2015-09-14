@@ -307,7 +307,8 @@ namespace ModelRender
             {
                 Wrold = Matrix.Identity,
                 View = Matrix.Identity,
-                Project = Matrix.Identity
+                Project = Matrix.Identity,
+                TexsCount = 1
             };
 
             constantBufferPointer = constantBuffer.Map(0);
@@ -380,6 +381,7 @@ namespace ModelRender
                         shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + viewStep + texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));
 
                     texsCount++;
+                    break;
                 }
 
                 triangleVertices = (new Func<Vertex[]>(() =>
@@ -534,14 +536,16 @@ namespace ModelRender
 
             foreach (BufferView b in bufferViews)
             {
-                constantBufferData.TexsCount = b.TexsCount;
-                Utilities.Write(constantBufferPointer, ref constantBufferData);
                 commandList.SetGraphicsRootDescriptorTable(1, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
                 commandList.SetVertexBuffer(0, b.vertexBufferView);
                 commandList.SetIndexBuffer(b.indexBufferView);
                 commandList.DrawIndexedInstanced(b.IndexCount, 1, 0, 0, 0);
-                commandList.DrawInstanced(3, 1, 0, 0);
             }
+            //int i = 15;
+            //commandList.SetGraphicsRootDescriptorTable(1, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + bufferViews[i].ViewStep);
+            //commandList.SetVertexBuffer(0, bufferViews[i].vertexBufferView);
+            //commandList.SetIndexBuffer(bufferViews[i].indexBufferView);
+            //commandList.DrawIndexedInstanced(bufferViews[i].IndexCount, 1, 0, 0, 0);
             commandList.ResourceBarrierTransition(renderTargets[frameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
 
             commandList.Close();
@@ -568,8 +572,8 @@ namespace ModelRender
         Matrix p = Matrix.Identity;
         public void Update()
         {
-            Vector3 from = new Vector3(0.0f, 150.0f, -100.0f);
-            Vector3 to = new Vector3(0.0f, 150.0f, 0.0f);
+            Vector3 from = new Vector3(0.0f, 55.0f, -100.0f);
+            Vector3 to = new Vector3(0.0f, 55.0f, 0.0f);
             View = Matrix.LookAtLH(
                 //Position of camera
                 from,
@@ -591,7 +595,7 @@ namespace ModelRender
             //
             World = Matrix.RotationY(Count * 0.02f);
 
-            World *= Matrix.Scaling(100f);
+            World *= Matrix.Scaling(50f);
 
             constantBufferData.Wrold = World;
             constantBufferData.View = View;
@@ -603,13 +607,12 @@ namespace ModelRender
                 Ambient = new Vector4(1f, 1f, 1f, 1f),
                 Diffuse = new Vector4(1f, 1f, 1f, 1f),
                 Specular = new Vector4(1f, 1f, 1f, 1f),
-                Position = new Vector3(-0.5f, -0.5f, -0.5f),
+                Position = new Vector3(-100f, -100f, -100f),
                 Range = 1000f,
                 Attenuation = new Vector3(1f, 0f, 0f)
             };
 
             //
-
             Utilities.Write(constantBufferPointer, ref constantBufferData);
             Count++;
         }

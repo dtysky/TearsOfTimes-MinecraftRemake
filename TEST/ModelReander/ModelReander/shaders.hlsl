@@ -17,6 +17,7 @@ struct PSInput
 struct GSInput
 {
 	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
 	float2 texcoord : TEXCOORD;
 };
 
@@ -85,21 +86,23 @@ PSInput VSMain(VSInput input)
 //	}
 //}
 
-float4 PSMain(PSInput input) : SV_TARGET
+float4 PSMain(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 1);
 	float4 D;
-	if (texsCount == 1)
-	{
-		D = g_texture.Sample(g_sampler, input.texcoord);
-	}
-	else
-	{
-		D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
-	}
+	//if (PrimID == 1)
+	//{
+	//	D = g_texture.Sample(g_sampler, input.texcoord);
+	//	//D = float4(0, 0, 1, 0);
+	//}
+	//else
+	//{
+	//	//D = float4(0, 1, 0, 0);
+	//	D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+	//}
 	//D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
-	//D = g_texture.Sample(g_sampler, input.texcoord);
-	float distance = length(lightDirection.xyz) / 2000;
+	D = g_texture.Sample(g_sampler, input.texcoord);
+	float distance = length(lightDirection.xyz) / 3000;
 	lightDirection = normalize(lightDirection);
 
 	//return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
