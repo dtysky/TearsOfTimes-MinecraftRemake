@@ -112,7 +112,19 @@ namespace ModelRender
         Matrix View = Matrix.Identity;
         private CpuDescriptorHandle handleDSV;
 
-        private int Count = 0;
+        struct RotateCount
+        {
+            public int X;
+            public int Y;
+            public int Z;
+        }
+
+        private RotateCount Count = new RotateCount()
+        {
+            X = 0,
+            Y = 0,
+            Z = 0
+        };
 
         public void Initialize(RenderForm form)
         {
@@ -135,16 +147,20 @@ namespace ModelRender
             switch(e.KeyCode)
             {
                 case Keys.W:
-                    //前
+                    //Front
+                    Count.X++;
                     break;
                 case Keys.A:
-                    //左
+                    //Left
+                    Count.Y++;
                     break;
                 case Keys.S:
-                    //后
+                    //Back
+                    Count.X--;
                     break;
                 case Keys.D:
-                    //右
+                    //Right
+                    Count.Y--;
                     break;
             }
         }
@@ -386,8 +402,8 @@ namespace ModelRender
             Utilities.Write(meshCtrBufferPointer, ref meshCtrBufferData);
 
             //model test
-            var modePath = "../../models/MikuWhiteOnePiece/";
-            Model model = Model.LoadFromFile(modePath + "TDAWhiteOnePieceMiku.x");
+            var modePath = "../../models/MikuDeepSea/";
+            Model model = Model.LoadFromFile(modePath + "DeepSeaGirl.x");
 
             Vertex[] triangleVertices;
             int[] triangleIndexes;
@@ -665,7 +681,8 @@ namespace ModelRender
                 1000.0f);
 
             //
-            World = Matrix.RotationY(Count * 0.02f);
+            World = Matrix.RotationY(Count.Y * 0.02f);
+            World *= Matrix.RotationX(Count.X * 0.02f);
 
             World *= Matrix.Scaling(50f);
 
@@ -686,7 +703,6 @@ namespace ModelRender
 
             //
             Utilities.Write(constantBufferPointer, ref constantBufferData);
-            Count++;
         }
 
         public void Render()
