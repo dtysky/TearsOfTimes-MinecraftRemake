@@ -358,8 +358,8 @@ namespace ModelRender
             Utilities.Write(meshCtrBufferPointer, ref meshCtrBufferData);
 
             //model test
-            var modePath = "../../models/MikuDeepSea/";
-            Model model = Model.LoadFromFile(modePath + "DeepSeaGirl.x");
+            var modePath = "../../models/MikuWhiteOnePiece/";
+            Model model = Model.LoadFromFile(modePath + "TDAWhiteOnePieceMiku.x");
 
             Vertex[] triangleVertices;
             int[] triangleIndexes;
@@ -424,6 +424,7 @@ namespace ModelRender
                         shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + viewStep + texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));
 
                     texsCount++;
+                    //break;
                 }
 
                 triangleVertices = (new Func<Vertex[]>(() =>
