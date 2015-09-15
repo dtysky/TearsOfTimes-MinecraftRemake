@@ -26,8 +26,13 @@ namespace ModelRender
             public Vector3 BiTangent;
             public Vector2 TexCoord;
         };
-        
-       struct Light
+
+        struct MeshCtrBufferData
+        {
+            public int TexsCount;
+        }
+
+        struct Light
         {
             public LightSourceType Type;
             public Vector4 Diffuse;
@@ -48,13 +53,9 @@ namespace ModelRender
             public Matrix Wrold;
             public Matrix View;
             public Matrix Project;
+            public int TexsCount;
             public Light Light;
         };
-
-        struct MeshCtrBufferData
-        {
-            public int TexsCount;
-        }
 
         private struct BufferView
         {
@@ -82,6 +83,10 @@ namespace ModelRender
         private GraphicsCommandList commandList;
         private int rtvDescriptorSize;
         private DescriptorHeap shaderRenderViewHeap;
+
+        Resource meshCtrBuffer;
+        MeshCtrBufferData meshCtrBufferData;
+        IntPtr meshCtrBufferPointer;
         private DescriptorHeap meshCtrBufferViewHeap;
 
         //App resources
@@ -92,9 +97,6 @@ namespace ModelRender
         Resource constantBuffer;
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
-        Resource meshCtrBuffer;
-        MeshCtrBufferData meshCtrBufferData;
-        IntPtr meshCtrBufferPointer;
 
         List<BufferView> bufferViews;
 
@@ -167,7 +169,7 @@ namespace ModelRender
 
             var srvHeapDesc = new DescriptorHeapDescription()
             {
-                DescriptorCount = 2,
+                DescriptorCount = 200,
                 Flags = DescriptorHeapFlags.ShaderVisible,
                 Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
             };
@@ -194,7 +196,7 @@ namespace ModelRender
             var svHeapDesc = new DescriptorHeapDescription()
             {
                 Type = DescriptorHeapType.Sampler,
-                DescriptorCount = 10,
+                DescriptorCount = 1,
                 Flags = DescriptorHeapFlags.ShaderVisible,
                 NodeMask = 0
             };
@@ -212,18 +214,18 @@ namespace ModelRender
                 // Root Parameters
                 new[]
                 {
-                     new RootParameter(ShaderVisibility.All,
+                    new RootParameter(ShaderVisibility.All,
                         new []
                         {
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ConstantBufferView,
                                 DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = int.MinValue,
+                                OffsetInDescriptorsFromTableStart = 0,
                                 BaseShaderRegister = 0
                             }
                         }),
-                    new RootParameter(ShaderVisibility.All, 
+                    new RootParameter(ShaderVisibility.All,
                         new RootConstants() {
                             ShaderRegister = 1,
                             Value32BitCount = 1
@@ -234,24 +236,24 @@ namespace ModelRender
                             new DescriptorRange()
                             {
                                 RangeType = DescriptorRangeType.ShaderResourceView,
-                                DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = -1,
+                                DescriptorCount = 2,
+                                OffsetInDescriptorsFromTableStart = 0,
                                 BaseShaderRegister = 0
-                            },
-                            new DescriptorRange()
-                            {
-                                RangeType = DescriptorRangeType.ShaderResourceView,
-                                DescriptorCount = 1,
-                                OffsetInDescriptorsFromTableStart = -1,
-                                BaseShaderRegister = 1
                             }
+                            //new DescriptorRange()
+                            //{
+                            //    RangeType = DescriptorRangeType.ShaderResourceView,
+                            //    DescriptorCount = 1,
+                            //    OffsetInDescriptorsFromTableStart = -1,
+                            //    BaseShaderRegister = 1
+                            //}
                         }),
                     new RootParameter(ShaderVisibility.Pixel,
                         new DescriptorRange()
                         {
                             RangeType = DescriptorRangeType.Sampler,
                             DescriptorCount = 1,
-                            OffsetInDescriptorsFromTableStart = int.MinValue,
+                            OffsetInDescriptorsFromTableStart = 0,
                             BaseShaderRegister = 0
                         }),
                 });
@@ -260,7 +262,7 @@ namespace ModelRender
 
             // Create the pipeline state, which includes compiling and loading shaders.
 #if DEBUG
-            //var warn = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
+            var warn = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
 #else
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "VSMain", "vs_5_0"));
@@ -329,13 +331,14 @@ namespace ModelRender
             {
                 Wrold = Matrix.Identity,
                 View = Matrix.Identity,
-                Project = Matrix.Identity
+                Project = Matrix.Identity,
+                TexsCount = 1
             };
 
             constantBufferPointer = constantBuffer.Map(0);
             Utilities.Write(constantBufferPointer, ref constantBufferData);
 
-            // build mesh controll buffer
+            //build mesh controll buffer
 
             meshCtrBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
 
@@ -567,7 +570,7 @@ namespace ModelRender
 
             DescriptorHeap[] descHeaps = new[] { samplerViewHeap, shaderRenderViewHeap }; // shaderRenderViewHeap, 
             commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
-            commandList.SetGraphicsRootDescriptorTable(2, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.SetGraphicsRootDescriptorTable(3, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
 
@@ -575,8 +578,7 @@ namespace ModelRender
 
             foreach (BufferView b in bufferViews)
             {
-                meshCtrBufferData.TexsCount = b.TexsCount;
-                commandList.SetComputeRoot32BitConstant(1, meshCtrBufferData.TexsCount, 0);
+                commandList.SetGraphicsRoot32BitConstant(1, b.TexsCount, 0);
                 commandList.SetGraphicsRootDescriptorTable(2, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
                 commandList.SetVertexBuffer(0, b.vertexBufferView);
                 commandList.SetIndexBuffer(b.indexBufferView);
@@ -648,7 +650,7 @@ namespace ModelRender
                 Ambient = new Vector4(1f, 1f, 1f, 1f),
                 Diffuse = new Vector4(1f, 1f, 1f, 1f),
                 Specular = new Vector4(1f, 1f, 1f, 1f),
-                Position = new Vector3(-500f, -500f, -500f),
+                Position = new Vector3(-100f, -100f, -100f),
                 Range = 1000f,
                 Attenuation = new Vector3(1f, 0f, 0f)
             };
@@ -687,4 +689,3 @@ namespace ModelRender
         }
     }
 }
-
