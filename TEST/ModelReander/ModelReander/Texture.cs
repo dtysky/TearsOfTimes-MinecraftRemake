@@ -81,16 +81,6 @@ namespace ModelRender
                     image = importer.LoadImage(fp.Replace(Path.GetExtension(fp), ".tga"));
                 }
 
-                //image.Bind();
-                //var info = DevIL.Unmanaged.IL.GetImageInfo();
-                //var bitmap = new System.Drawing.Bitmap(info.Width, info.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                //var rect = new System.Drawing.Rectangle(0, 0, info.Width, info.Height);
-                //var data = bitmap.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                //DevIL.Unmanaged.IL.CopyPixels(0, 0, 0, info.Width, info.Height, 1, DataFormat.BGRA, DataType.UnsignedByte);
-                //bitmap.UnlockBits(data);
-                //var converter = new System.Drawing.ImageConverter();
-                //var raw = (byte[])converter.ConvertTo(bitmap, typeof(byte[]));
-
                 textures.Add(new Texture(image, fp));
             }
             return textures;

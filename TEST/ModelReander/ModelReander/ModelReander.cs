@@ -118,8 +118,36 @@ namespace ModelRender
         {
             LoadPipeline(form);
             LoadAssets();
+            form.KeyDown += Form_KeyDown;
+            form.MouseMove += Form_MouseMove;
         }
 
+        public Vector2 Mouse_Pos = new Vector2(0, 0);
+
+        private void Form_MouseMove(object sender, MouseEventArgs e)
+        {
+            Vector2 delta_move = new Vector2(e.X - Mouse_Pos.X, e.Y - Mouse_Pos.Y);
+
+        }
+
+        private void Form_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch(e.KeyCode)
+            {
+                case Keys.W:
+                    //前
+                    break;
+                case Keys.A:
+                    //左
+                    break;
+                case Keys.S:
+                    //后
+                    break;
+                case Keys.D:
+                    //右
+                    break;
+            }
+        }
 
         private void LoadPipeline(RenderForm form)
         {
