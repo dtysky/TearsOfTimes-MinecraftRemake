@@ -16,7 +16,6 @@ namespace ModelRender
         private Texture(Image image, string filePath)
         {
             //Data = raw;
-            Image = image;
             //image.ConvertToDxtc(CompressedDataFormat.DXT5);
             Width = image.Width;
             Height = image.Height;
@@ -77,7 +76,7 @@ namespace ModelRender
                 if (Path.GetExtension(fp) != ".tga" && Path.GetExtension(fp) != ".png")
                 {
                     if (!File.Exists(fp.Replace(Path.GetExtension(fp), ".tga")))
-                        exporter.SaveImage(image, ImageType.Tga, fp.Replace(Path.GetExtension(fp),".tga"));                   
+                        exporter.SaveImage(image, ImageType.Tga, fp.Replace(Path.GetExtension(fp), ".tga"));
                     image = importer.LoadImage(fp.Replace(Path.GetExtension(fp), ".tga"));
                 }
 
@@ -86,9 +85,10 @@ namespace ModelRender
                 //var bitmap = new System.Drawing.Bitmap(info.Width, info.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 //var rect = new System.Drawing.Rectangle(0, 0, info.Width, info.Height);
                 //var data = bitmap.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                //DevIL.Unmanaged.IL.CopyPixels(0, 0, 0, info.Width, info.Height, 1, DataFormat.BGRA, DataType.UnsignedByte);
+                //DevIL.Unmanaged.IL.CopyPixels(0, 0, 0, info.Width, info.Height, info.Depth, DataFormat.BGRA, DataType.UnsignedByte);
                 //bitmap.UnlockBits(data);
                 //var converter = new System.Drawing.ImageConverter();
+                //var test = converter.ConvertTo(bitmap, typeof(byte[]));
                 //var raw = (byte[])converter.ConvertTo(bitmap, typeof(byte[]));
 
                 textures.Add(new Texture(image, fp));
