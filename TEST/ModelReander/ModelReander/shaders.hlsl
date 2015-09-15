@@ -102,7 +102,7 @@ float4 PSMain1(PSInput input) : SV_TARGET
 	else
 	{
 		//D = float4(0, 1, 0, 0);
-		D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+		D = g_texture1.Sample(g_sampler, input.texcoord) * g_texture.Sample(g_sampler, input.texcoord);
 	}
 	//D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
 	/*D = g_texture.Sample(g_sampler, input.texcoord);
