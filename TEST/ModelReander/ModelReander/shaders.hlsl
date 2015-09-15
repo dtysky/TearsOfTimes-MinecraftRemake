@@ -41,9 +41,13 @@ cbuffer ConstantBufferData : register(b0)
 	matrix world;
 	matrix view;
 	matrix project;
-	int texsCount;
 	Light light;
 };
+
+cbuffer MeshCtrBufferData : register(b1)
+{
+	int TexsCount;
+}
 
 Texture2D g_texture : register(t0);
 Texture2D g_texture1 : register(t1);
@@ -86,30 +90,30 @@ PSInput VSMain(VSInput input)
 //	}
 //}
 
-float4 PSMain1(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
+float4 PSMain(PSInput input) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 1);
 	float4 D;
-	//if (PrimID == 1)
-	//{
-	//	D = g_texture.Sample(g_sampler, input.texcoord);
-	//	//D = float4(0, 0, 1, 0);
-	//}
-	//else
-	//{
-	//	//D = float4(0, 1, 0, 0);
-	//	D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
-	//}
+	if (TexsCount == 1)
+	{
+		D = g_texture.Sample(g_sampler, input.texcoord);
+		//D = float4(0, 0, 1, 0);
+	}
+	else
+	{
+		//D = float4(0, 1, 0, 0);
+		D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
+	}
 	//D = (g_texture1.Sample(g_sampler, input.texcoord) + g_texture.Sample(g_sampler, input.texcoord)) / 2;
-	D = g_texture.Sample(g_sampler, input.texcoord);
+	/*D = g_texture.Sample(g_sampler, input.texcoord);
 	float distance = length(lightDirection.xyz) / 1000;
 	lightDirection = normalize(lightDirection);
 
-	return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;
+	return saturate(dot(normalize(input.normal), -lightDirection))*D / distance;*/
 	return D;
 }
 
-float4 PSMain(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
+float4 PSMain1(PSInput input, uint PrimID : SV_PrimitiveID) : SV_TARGET
 {
 	float4 lightDirection = input.position - float4(light.position, 0);
 	float4 diffuse = g_texture.Sample(g_sampler, input.texcoord);

@@ -48,9 +48,13 @@ namespace ModelRender
             public Matrix Wrold;
             public Matrix View;
             public Matrix Project;
-            public int TexsCount;
             public Light Light;
         };
+
+        struct MeshCtrBufferData
+        {
+            public int TexsCount;
+        }
 
         private struct BufferView
         {
@@ -78,6 +82,7 @@ namespace ModelRender
         private GraphicsCommandList commandList;
         private int rtvDescriptorSize;
         private DescriptorHeap shaderRenderViewHeap;
+        private DescriptorHeap meshCtrBufferViewHeap;
 
         //App resources
         Resource vertexBuffer;
@@ -87,6 +92,9 @@ namespace ModelRender
         Resource constantBuffer;
         ConstantBufferData constantBufferData;
         IntPtr constantBufferPointer;
+        Resource meshCtrBuffer;
+        MeshCtrBufferData meshCtrBufferData;
+        IntPtr meshCtrBufferPointer;
 
         List<BufferView> bufferViews;
 
@@ -166,6 +174,15 @@ namespace ModelRender
 
             shaderRenderViewHeap = device.CreateDescriptorHeap(srvHeapDesc);
 
+            var meshCtrCbvDesc = new DescriptorHeapDescription()
+            {
+                DescriptorCount = 1,
+                Flags = DescriptorHeapFlags.ShaderVisible,
+                Type = DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView
+            };
+
+            meshCtrBufferViewHeap = device.CreateDescriptorHeap(meshCtrCbvDesc);
+
             var rtcHandle = renderTargetViewHeap.CPUDescriptorHandleForHeapStart;
             for (int n = 0; n < FrameCount; n++)
             {
@@ -206,6 +223,11 @@ namespace ModelRender
                                 BaseShaderRegister = 0
                             }
                         }),
+                    new RootParameter(ShaderVisibility.All, 
+                        new RootConstants() {
+                            ShaderRegister = 1,
+                            Value32BitCount = 1
+                        }),
                     new RootParameter(ShaderVisibility.All,
                         new []
                         {
@@ -238,7 +260,7 @@ namespace ModelRender
 
             // Create the pipeline state, which includes compiling and loading shaders.
 #if DEBUG
-            var warn = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
+            //var warn = SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug);
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.Compile(SharpDX.IO.NativeFile.ReadAllText("../../shaders.hlsl"), "VSMain", "vs_5_0", SharpDX.D3DCompiler.ShaderFlags.Debug));
 #else
             var vertexShader = new ShaderBytecode(SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile("shaders.hlsl", "VSMain", "vs_5_0"));
@@ -307,12 +329,30 @@ namespace ModelRender
             {
                 Wrold = Matrix.Identity,
                 View = Matrix.Identity,
-                Project = Matrix.Identity,
-                TexsCount = 1
+                Project = Matrix.Identity
             };
 
             constantBufferPointer = constantBuffer.Map(0);
             Utilities.Write(constantBufferPointer, ref constantBufferData);
+
+            // build mesh controll buffer
+
+            meshCtrBuffer = device.CreateCommittedResource(new HeapProperties(HeapType.Upload), HeapFlags.None, ResourceDescription.Buffer(1024 * 64), ResourceStates.GenericRead);
+
+            cbDesc = new ConstantBufferViewDescription()
+            {
+                BufferLocation = meshCtrBuffer.GPUVirtualAddress,
+                SizeInBytes = (Utilities.SizeOf<MeshCtrBufferData>() + 255) & ~255
+            };
+            device.CreateConstantBufferView(cbDesc, meshCtrBufferViewHeap.CPUDescriptorHandleForHeapStart);
+
+            meshCtrBufferData = new MeshCtrBufferData
+            {
+                TexsCount = 1
+            };
+
+            meshCtrBufferPointer = meshCtrBuffer.Map(0);
+            Utilities.Write(meshCtrBufferPointer, ref meshCtrBufferData);
 
             //model test
             var modePath = "../../models/MikuDeepSea/";
@@ -337,8 +377,8 @@ namespace ModelRender
                 }
                 else
                 {
-                    //continue;
-                    texs = Texture.LoadFromFile(modePath, "tex/jacket.png");
+                    continue;
+                    //texs = Texture.LoadFromFile(modePath, "tex/jacket.png");
                 }
 
                 int texsCount = 0;
@@ -381,7 +421,6 @@ namespace ModelRender
                         shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + viewStep + texsCount * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));
 
                     texsCount++;
-                    break;
                 }
 
                 triangleVertices = (new Func<Vertex[]>(() =>
@@ -528,15 +567,17 @@ namespace ModelRender
 
             DescriptorHeap[] descHeaps = new[] { samplerViewHeap, shaderRenderViewHeap }; // shaderRenderViewHeap, 
             commandList.SetDescriptorHeaps(descHeaps.GetLength(0), descHeaps);
-            commandList.SetGraphicsRootDescriptorTable(0, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
-            commandList.SetGraphicsRootDescriptorTable(2, samplerViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(2, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart);
+            commandList.SetGraphicsRootDescriptorTable(3, samplerViewHeap.GPUDescriptorHandleForHeapStart);
             commandList.PipelineState = pipelineState;
 
             commandList.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
             foreach (BufferView b in bufferViews)
             {
-                commandList.SetGraphicsRootDescriptorTable(1, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
+                meshCtrBufferData.TexsCount = b.TexsCount;
+                commandList.SetComputeRoot32BitConstant(1, meshCtrBufferData.TexsCount, 0);
+                commandList.SetGraphicsRootDescriptorTable(2, shaderRenderViewHeap.GPUDescriptorHandleForHeapStart + b.ViewStep);
                 commandList.SetVertexBuffer(0, b.vertexBufferView);
                 commandList.SetIndexBuffer(b.indexBufferView);
                 commandList.DrawIndexedInstanced(b.IndexCount, 1, 0, 0, 0);
@@ -607,7 +648,7 @@ namespace ModelRender
                 Ambient = new Vector4(1f, 1f, 1f, 1f),
                 Diffuse = new Vector4(1f, 1f, 1f, 1f),
                 Specular = new Vector4(1f, 1f, 1f, 1f),
-                Position = new Vector3(-100f, -100f, -100f),
+                Position = new Vector3(-500f, -500f, -500f),
                 Range = 1000f,
                 Attenuation = new Vector3(1f, 0f, 0f)
             };
