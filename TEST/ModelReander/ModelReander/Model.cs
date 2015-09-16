@@ -80,8 +80,29 @@ namespace ModelRender
                 BiTangents[i].Y = bitangents[i].Y;
                 BiTangents[i].Z = bitangents[i].Z;
             }
+            Diffuse = new Vector4()
+            {
+                X = material.ColorDiffuse.R,
+                Y = material.ColorDiffuse.G,
+                Z = material.ColorDiffuse.B,
+                W = material.ColorDiffuse.A
+            };
+            Emissive = new Vector4()
+            {
+                X = material.ColorEmissive.R,
+                Y = material.ColorEmissive.G,
+                Z = material.ColorEmissive.B,
+                W = material.ColorEmissive.A
+            };
+            Specular = new Vector4()
+            {
+                X = material.ColorSpecular.R,
+                Y = material.ColorSpecular.G,
+                Z = material.ColorSpecular.B,
+                W = material.ColorSpecular.A
+            };
             Indices = indices;
-            Material = material;
+            TexturePath = material.TextureDiffuse.FilePath;
         }
 
         public string Name { get; }
@@ -91,7 +112,10 @@ namespace ModelRender
         public Vector3[] Normals { get; }
         public Vector3[] Tangents { get; }
         public Vector3[] BiTangents { get; }
-        public Material Material { get; }
+        public Vector4 Diffuse { get; }
+        public Vector4 Emissive { get; }
+        public Vector4 Specular { get; }
+        public string TexturePath { get; }
 
         public Matrix MatrixProject { get; }
     }

@@ -24,6 +24,9 @@ namespace ModelRender
             public Vector3 Normal;
             public Vector3 Tangent;
             public Vector3 BiTangent;
+            public Vector4 Diffuse;
+            public Vector4 emissive;
+            public Vector4 Specular;
             public Vector2 TexCoord;
         };
 
@@ -163,19 +166,19 @@ namespace ModelRender
             {
                 case Keys.W:
                     //Front
-                    Player_Pos.Z+=0.1f;
+                    Player_Pos.Y += 0.1f;
                     break;
                 case Keys.A:
                     //Left
-                    Player_Pos.X-=0.1f;
+                    Player_Pos.X -= 0.1f;
                     break;
                 case Keys.S:
                     //Back
-                    Player_Pos.Z-=0.1f;
+                    Player_Pos.Y -= 0.1f;
                     break;
                 case Keys.D:
                     //Right
-                    Player_Pos.X+=0.1f;
+                    Player_Pos.X += 0.1f;
                     break;
             }
         }
@@ -340,7 +343,10 @@ namespace ModelRender
                     new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
                     new InputElement("TANGENT", 0, Format.R32G32B32_Float, 24, 0),
                     new InputElement("BITANGENT", 0, Format.R32G32B32_Float, 36, 0),
-                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 48, 0)
+                    new InputElement("DIFFUSE", 0, Format.R32G32B32_Float, 48, 0),
+                    new InputElement("EMISSIVE", 0, Format.R32G32B32_Float, 64, 0),
+                    new InputElement("SPECULAR", 0, Format.R32G32B32_Float, 80, 0),
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 96, 0)
             };
 
             // Describe and create the graphics pipeline state object (PSO).
@@ -417,8 +423,8 @@ namespace ModelRender
             Utilities.Write(meshCtrBufferPointer, ref meshCtrBufferData);
 
             //model test
-            var modePath = "../../models/MikuWhiteOnePiece/";
-            Model model = Model.LoadFromFile(modePath + "TDAWhiteOnePieceMiku.x");
+            var modePath = "../../models/MikuDeepSea/";
+            Model model = Model.LoadFromFile(modePath + "DeepSeaGirl.x");
 
             Vertex[] triangleVertices;
             int[] triangleIndexes;
@@ -433,9 +439,9 @@ namespace ModelRender
             
             foreach (ModelComponent m in model.Components)
             {
-                if (m.Material.HasTextureDiffuse)
+                if (m.TexturePath != null)
                 {
-                    texs = Texture.LoadFromFile(modePath, m.Material.TextureDiffuse.FilePath);
+                    texs = Texture.LoadFromFile(modePath, m.TexturePath);
                 }
                 else
                 {
@@ -496,6 +502,9 @@ namespace ModelRender
                         v[i].Normal = m.Normals[i];
                         //v[i].Tangent = m.Tangents[i];
                         //v[i].BiTangent = m.BiTangents[i];
+                        v[i].Diffuse = m.Diffuse;
+                        v[i].emissive = m.Emissive;
+                        v[i].Specular = m.Specular;
                     }
                     return v;
                 }))();
@@ -713,7 +722,7 @@ namespace ModelRender
                 Ambient = new Vector4(1f, 1f, 1f, 1f),
                 Diffuse = new Vector4(1f, 1f, 1f, 1f),
                 Specular = new Vector4(1f, 1f, 1f, 1f),
-                Position = new Vector3(-100f, -100f, -100f),
+                Position = new Vector3(-10f, -10f, -10f),
                 Range = 1000f,
                 Attenuation = new Vector3(1f, 0f, 0f)
             };

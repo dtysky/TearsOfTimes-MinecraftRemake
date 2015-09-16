@@ -4,6 +4,9 @@ struct VSInput
 	float3 normal : NORMAL;
 	float3 tangent: TANGENT;
 	float3 bitangent : BITANGENT;
+	float4 diffuse : DIFFUSE;
+	float4 emissive : EMISSIVE;
+	float4 specular : SPECULAR;
 	float2 texcoord : TEXCOORD;
 };
 
@@ -12,6 +15,9 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 texcoord : TEXCOORD;
+	//1: diffuse
+	//2: emissive
+	float4 light[3] : COLOR;
 };
 
 struct GSInput
@@ -62,6 +68,9 @@ PSInput VSMain(VSInput input)
 	result.position = mul(project, result.position);
 	result.normal = mul(world, input.normal);
 	result.texcoord = input.texcoord;
+	result.light[0] = input.diffuse;
+	result.light[2] = input.emissive;
+	result.light[1] = input.specular;
 
 	return result;
 
@@ -121,11 +130,13 @@ float4 PSMain(PSInput input) : SV_TARGET
 	lightDirection = normalize(lightDirection);
 
 	float lightIntensity = dot(input.normal, -lightDirection);
-	float diffuseIntensity = 1.0;
+
+	float4 lightColor = input.light[0] * lightIntensity + input.light[1] * lightIntensity + input.light[2];
+
 	float garma = 1.5;
 	if (TexsCount != 1)
 	{
-		return garma * (saturate((g_texture1.Sample(g_sampler, input.texcoord) * diffuseIntensity * lightIntensity) / (pow(distance, 0.5))) * diffuse * 0.4 + diffuse * 0.6);
+		return garma * (saturate((g_texture1.Sample(g_sampler, input.texcoord) * lightColor) / (pow(distance, 0.5))) * diffuse * 0.4 + diffuse * 0.6);
 	}
-	return garma * (saturate((diffuseIntensity * lightIntensity) / (pow(distance,0.5))) * diffuse * 0.4 + diffuse * 0.6);
+	return garma * (saturate(lightColor / (pow(distance,0.5))) * diffuse * 0.4 + diffuse * 0.6);
 }
