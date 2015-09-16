@@ -119,12 +119,16 @@ namespace ModelRender
             public int Z;
         }
 
+        float Scalling = 50.0f;
+
         private RotateCount Count = new RotateCount()
         {
             X = 0,
-            Y = 0,
+            Y = 180,
             Z = 0
         };
+
+        Vector3 Player_Pos = new Vector3(0, 0, 0);
 
         public void Initialize(RenderForm form)
         {
@@ -132,6 +136,12 @@ namespace ModelRender
             LoadAssets();
             form.KeyDown += Form_KeyDown;
             form.MouseMove += Form_MouseMove;
+            form.MouseWheel += Form_MouseWheel;
+        }
+
+        private void Form_MouseWheel(object sender, MouseEventArgs e)
+        {
+            Scalling += 0.05f * e.Delta;
         }
 
         public Vector2 Mouse_Pos = new Vector2(0, 0);
@@ -139,7 +149,12 @@ namespace ModelRender
         private void Form_MouseMove(object sender, MouseEventArgs e)
         {
             Vector2 delta_move = new Vector2(e.X - Mouse_Pos.X, e.Y - Mouse_Pos.Y);
-
+            Mouse_Pos.X = e.X;Mouse_Pos.Y = e.Y;
+            if(e.Button == MouseButtons.Left)
+            {
+                Count.X += Convert.ToInt32(0.5*delta_move.Y);
+                Count.Y -= Convert.ToInt32(0.5*delta_move.X);
+            }
         }
 
         private void Form_KeyDown(object sender, KeyEventArgs e)
@@ -148,19 +163,19 @@ namespace ModelRender
             {
                 case Keys.W:
                     //Front
-                    Count.X++;
+                    Player_Pos.Z+=0.1f;
                     break;
                 case Keys.A:
                     //Left
-                    Count.Y++;
+                    Player_Pos.X-=0.1f;
                     break;
                 case Keys.S:
                     //Back
-                    Count.X--;
+                    Player_Pos.Z-=0.1f;
                     break;
                 case Keys.D:
                     //Right
-                    Count.Y--;
+                    Player_Pos.X+=0.1f;
                     break;
             }
         }
@@ -402,8 +417,8 @@ namespace ModelRender
             Utilities.Write(meshCtrBufferPointer, ref meshCtrBufferData);
 
             //model test
-            var modePath = "../../models/MikuDeepSea/";
-            Model model = Model.LoadFromFile(modePath + "DeepSeaGirl.x");
+            var modePath = "../../models/MikuWhiteOnePiece/";
+            Model model = Model.LoadFromFile(modePath + "TDAWhiteOnePieceMiku.x");
 
             Vertex[] triangleVertices;
             int[] triangleIndexes;
@@ -681,10 +696,12 @@ namespace ModelRender
                 1000.0f);
 
             //
-            World = Matrix.RotationY(Count.Y * 0.02f);
-            World *= Matrix.RotationX(Count.X * 0.02f);
 
-            World *= Matrix.Scaling(50f);
+            World = Matrix.Translation(Player_Pos);
+            World *= Matrix.RotationX(Count.X * 0.02f);
+            World *= Matrix.RotationY(Count.Y * 0.02f);
+
+            World *= Matrix.Scaling(Scalling);
 
             constantBufferData.Wrold = World;
             constantBufferData.View = View;

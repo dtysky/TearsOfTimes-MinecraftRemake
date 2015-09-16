@@ -122,9 +122,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 
 	float lightIntensity = dot(input.normal, -lightDirection);
 	float diffuseIntensity = 1.0;
+	float garma = 1.5;
 	if (TexsCount != 1)
 	{
-		return saturate((g_texture1.Sample(g_sampler, input.texcoord) * diffuseIntensity * lightIntensity) / (pow(distance, 0.5))) * diffuse * 0.4 + diffuse * 0.6;
+		return garma * (saturate((g_texture1.Sample(g_sampler, input.texcoord) * diffuseIntensity * lightIntensity) / (pow(distance, 0.5))) * diffuse * 0.4 + diffuse * 0.6);
 	}
-	return saturate((diffuseIntensity * lightIntensity) / (pow(distance,0.5))) * diffuse * 0.5 + diffuse * 0.5;
+	return garma * (saturate((diffuseIntensity * lightIntensity) / (pow(distance,0.5))) * diffuse * 0.4 + diffuse * 0.6);
 }
