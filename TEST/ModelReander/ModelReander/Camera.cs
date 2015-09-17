@@ -124,10 +124,10 @@ namespace ModelRender
        
     }
 
-        private Vector3 Position = new Vector3(0,0,0);
-        private Vector3 Right = new Vector3(1.0f,0,0);
-        private Vector3 Up = new Vector3(0,1.0f,0);
-        private Vector3 Look = new Vector3(0,0,1.0f);
+        protected Vector3 Position = new Vector3(0,0,0);
+        protected Vector3 Right = new Vector3(1.0f,0,0);
+        protected Vector3 Up = new Vector3(0,1.0f,0);
+        protected Vector3 Look = new Vector3(0,0,1.0f);
 
         float NearZ;
         float FarZ;

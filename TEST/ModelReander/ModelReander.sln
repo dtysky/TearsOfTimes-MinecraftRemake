@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelReander", "ModelReander\ModelReander.csproj", "{7D0B317A-8806-44B7-93BD-2A7C4D1757D1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelRender", "ModelReander\ModelRender.csproj", "{7D0B317A-8806-44B7-93BD-2A7C4D1757D1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{578FD0D9-41AA-4FA4-8D9B-4021978FA48D} = {578FD0D9-41AA-4FA4-8D9B-4021978FA48D}
 	EndProjectSection

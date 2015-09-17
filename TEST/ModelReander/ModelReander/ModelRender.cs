@@ -15,7 +15,6 @@ namespace ModelRender
     using Assimp;
     using Assimp.Configs;
     using System.Windows.Forms;
-    using ModelReander;
 
     public class ModelRender : IDisposable
     {
@@ -70,8 +69,6 @@ namespace ModelRender
             public int TexsCount;
         }
 
-        private FollowingCamera Hero;
-
         const int FrameCount = 2;
 
         private ViewportF viewport;
@@ -113,12 +110,10 @@ namespace ModelRender
         private Fence fence;
         private int fenceValue;
         
-        Matrix World = Matrix.Identity;
-        Camera Player = new Camera();
+        FollowingCamera Player = new FollowingCamera();
         private CpuDescriptorHandle handleDSV;
 
         float Scalling = 50.0f;
-        private float AngleY;
 
         public void Initialize(RenderForm form)
         {
@@ -128,8 +123,6 @@ namespace ModelRender
             form.MouseMove += Form_MouseMove;
             form.MouseWheel += Form_MouseWheel;
             Player.SetPosition(0, 100f, -100f);
-            Hero = new FollowingCamera(new Vector3(0, -50, 100));
-            Hero.SetPosition(0, 100f, -100f);
         }
 
         private void Form_MouseWheel(object sender, MouseEventArgs e)
@@ -147,8 +140,6 @@ namespace ModelRender
             {
                 Player.Pitch(Convert.ToSingle(Math.Asin(delta_move.Y / 100.0)));
                 Player.RotateY(Convert.ToSingle(Math.Asin(delta_move.X / 100.0)));
-                Hero.Pitch(Convert.ToSingle(Math.Asin(delta_move.Y / 100.0)));
-                Hero.RotateY(Convert.ToSingle(Math.Asin(delta_move.X / 100.0)));
             }
         }
 
@@ -159,22 +150,18 @@ namespace ModelRender
                 case Keys.W:
                     //Front
                     Player.Walk(1.0f);
-                    Hero.Walk(1.0f);
                     break;
                 case Keys.A:
                     //Left
                     Player.Strafe(-1.0f);
-                    Hero.Strafe(-1.0f);
                     break;
                 case Keys.S:
                     //Back
                     Player.Walk(-1.0f);
-                    Hero.Walk(-1.0f);
                     break;
                 case Keys.D:
                     //Right
                     Player.Strafe(1.0f);
-                    Hero.Strafe(1.0f);
                     break;
             }
         }
@@ -677,8 +664,6 @@ namespace ModelRender
             frameIndex = swapChain.CurrentBackBufferIndex;
         }
 
-        Matrix p = Matrix.Identity;
-
         public void Update()
         {
             Player.SetLens(
@@ -686,19 +671,8 @@ namespace ModelRender
                 viewport.Width / viewport.Height, 
                 1.0f, 
                 1000.0f);
-            Hero.SetLens(
-                MathUtil.Pi / 3f,
-                viewport.Width / viewport.Height,
-                1.0f,
-                1000.0f);
             Player.Update();
-            Hero.Update();
-            World = Matrix.Identity;
-            World *= Matrix.Scaling(Scalling);
-            World *= Matrix.Translation(Hero.Position);
-            World *= Matrix.RotationY(Hero.Angle.Y);
-            World *= Matrix.RotationX(Hero.Angle.X);
-            constantBufferData.Wrold = World;
+            constantBufferData.Wrold = Player.World * Matrix.Scaling(Scalling);
             constantBufferData.View = Player.View;
             constantBufferData.Project = Player.Project;
 

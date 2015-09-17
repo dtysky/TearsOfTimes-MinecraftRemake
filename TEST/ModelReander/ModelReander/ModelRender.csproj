@@ -118,9 +118,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
-    <Compile Include="FallowingCamera.cs" />
+    <Compile Include="FollowingCamera.cs" />
     <Compile Include="Model.cs" />
-    <Compile Include="ModelReander.cs" />
+    <Compile Include="ModelRender.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Texture.cs" />
   </ItemGroup>
