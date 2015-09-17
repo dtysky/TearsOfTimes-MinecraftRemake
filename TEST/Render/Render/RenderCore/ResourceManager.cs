@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace Render.Core
 {
-    class ResourceManager
+    public static class ResourceManager
     {
+        public static Dictionary<string, Pipeline> Pipelines = new Dictionary<string,Pipeline>();
+
+        public static Dictionary<string, Material> Materials = new Dictionary<string, Material>();
+
+        public static Dictionary<string, Model> Models = new Dictionary<string, Model>();
+
     }
 }

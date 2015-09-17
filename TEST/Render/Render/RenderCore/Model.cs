@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Render.Core
 {
-    class Model
+    public class Model
     {
     }
 }

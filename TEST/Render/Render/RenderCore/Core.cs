@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Render.Core
 {
+    using SharpDX.Direct3D12;
     using SharpDX.Windows;
     public class Engine : IDisposable
     {
@@ -27,5 +28,7 @@ namespace Render.Core
         {
             
         }
+
+        public static Device Device { get; }
     }
 }
