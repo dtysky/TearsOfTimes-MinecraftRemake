@@ -12,6 +12,8 @@ namespace ModelRender
 
             using (var app = new ModelRender())
             {
+                form.Width = 1440;
+                form.Height = 900;
                 form.Show();
                 app.Initialize(form);
 

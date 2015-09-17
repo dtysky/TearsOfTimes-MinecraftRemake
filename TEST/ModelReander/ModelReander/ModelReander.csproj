@@ -118,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
+    <Compile Include="FallowingCamera.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="ModelReander.cs" />
     <Compile Include="Program.cs" />
