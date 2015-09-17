@@ -696,8 +696,8 @@ namespace ModelRender
             World = Matrix.Identity;
             World *= Matrix.Scaling(Scalling);
             World *= Matrix.Translation(Hero.Position);
-            //World *= Matrix.RotationY(Hero.Angle.Y);
-            //World *= Matrix.RotationX(Hero.Angle.X);
+            World *= Matrix.RotationY(Hero.Angle.Y);
+            World *= Matrix.RotationX(Hero.Angle.X);
             constantBufferData.Wrold = World;
             constantBufferData.View = Player.View;
             constantBufferData.Project = Player.Project;
