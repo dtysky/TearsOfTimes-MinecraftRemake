@@ -111,27 +111,10 @@ namespace ModelRender
         private int fenceValue;
         
         Matrix World = Matrix.Identity;
-        Matrix Project = Matrix.Identity;
-        Matrix View = Matrix.Identity;
+        Camera Player = new Camera();
         private CpuDescriptorHandle handleDSV;
 
-        struct RotateCount
-        {
-            public int X;
-            public int Y;
-            public int Z;
-        }
-
         float Scalling = 50.0f;
-
-        private RotateCount Count = new RotateCount()
-        {
-            X = 0,
-            Y = 180,
-            Z = 0
-        };
-
-        Vector3 Player_Pos = new Vector3(0, 0, 0);
 
         public void Initialize(RenderForm form)
         {
@@ -140,6 +123,7 @@ namespace ModelRender
             form.KeyDown += Form_KeyDown;
             form.MouseMove += Form_MouseMove;
             form.MouseWheel += Form_MouseWheel;
+            Player.SetPosition(0, 100f, -100f);
         }
 
         private void Form_MouseWheel(object sender, MouseEventArgs e)
@@ -155,8 +139,8 @@ namespace ModelRender
             Mouse_Pos.X = e.X;Mouse_Pos.Y = e.Y;
             if(e.Button == MouseButtons.Left)
             {
-                Count.X += Convert.ToInt32(0.5*delta_move.Y);
-                Count.Y -= Convert.ToInt32(0.5*delta_move.X);
+                Player.Pitch(Convert.ToSingle(Math.Asin(delta_move.Y / 100.0)));
+                Player.RotateY(Convert.ToSingle(Math.Asin(delta_move.X / 100.0)));
             }
         }
 
@@ -166,19 +150,19 @@ namespace ModelRender
             {
                 case Keys.W:
                     //Front
-                    Player_Pos.Y += 0.1f;
+                    Player.Walk(1.0f);
                     break;
                 case Keys.A:
                     //Left
-                    Player_Pos.X -= 0.1f;
+                    Player.Strafe(-1.0f);
                     break;
                 case Keys.S:
                     //Back
-                    Player_Pos.Y -= 0.1f;
+                    Player.Walk(-1.0f);
                     break;
                 case Keys.D:
                     //Right
-                    Player_Pos.X += 0.1f;
+                    Player.Strafe(1.0f);
                     break;
             }
         }
@@ -684,37 +668,17 @@ namespace ModelRender
         Matrix p = Matrix.Identity;
         public void Update()
         {
-            Vector3 from = new Vector3(0.0f, 55.0f, -100.0f);
-            Vector3 to = new Vector3(0.0f, 55.0f, 0.0f);
-            View = Matrix.LookAtLH(
-                //Position of camera
-                from,
-                //Viewpoint of camera
-                to,
-                //"Up"
-                new Vector3(0.0f, 1.0f, 0.0f));
-
-            Project = Matrix.PerspectiveFovLH(
-                //Range of vertical
-                MathUtil.Pi / 3f,
-                //Aspect ratio
-                viewport.Width / viewport.Height,
-                //The nearest distance
-                1.0f,
-                //The farthest distance
+            Player.SetLens(
+                MathUtil.Pi / 3f, 
+                viewport.Width / viewport.Height, 
+                1.0f, 
                 1000.0f);
-
-            //
-
-            World = Matrix.Translation(Player_Pos);
-            World *= Matrix.RotationX(Count.X * 0.02f);
-            World *= Matrix.RotationY(Count.Y * 0.02f);
-
+            World = Matrix.Identity;
             World *= Matrix.Scaling(Scalling);
-
+            Player.Update();
             constantBufferData.Wrold = World;
-            constantBufferData.View = View;
-            constantBufferData.Project = Project;
+            constantBufferData.View = Player.View;
+            constantBufferData.Project = Player.Project;
 
             constantBufferData.Light = new Light
             {
@@ -727,7 +691,6 @@ namespace ModelRender
                 Attenuation = new Vector3(1f, 0f, 0f)
             };
 
-            //
             Utilities.Write(constantBufferPointer, ref constantBufferData);
         }
 
