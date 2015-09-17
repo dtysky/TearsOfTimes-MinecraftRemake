@@ -79,6 +79,6 @@ namespace Render.Core
             { ShaderType.Vertex,  "vs_5_0" }
         };
 
-        SharpDX.D3DCompiler.ShaderBytecode Bytecode;
+        public SharpDX.D3DCompiler.ShaderBytecode Bytecode { get; private set; }
     }
 }
