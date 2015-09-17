@@ -70,7 +70,7 @@ namespace ModelRender
             public int TexsCount;
         }
 
-        private FallowingCamera Hero;
+        private FollowingCamera Hero;
 
         const int FrameCount = 2;
 
@@ -128,7 +128,7 @@ namespace ModelRender
             form.MouseMove += Form_MouseMove;
             form.MouseWheel += Form_MouseWheel;
             Player.SetPosition(0, 100f, -100f);
-            Hero = new FallowingCamera(new Vector3(0, -50, 100));
+            Hero = new FollowingCamera(new Vector3(0, -50, 100));
             Hero.SetPosition(0, 100f, -100f);
         }
 
