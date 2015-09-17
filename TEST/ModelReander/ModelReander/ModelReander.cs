@@ -128,7 +128,8 @@ namespace ModelRender
             form.MouseMove += Form_MouseMove;
             form.MouseWheel += Form_MouseWheel;
             Player.SetPosition(0, 100f, -100f);
-            Hero = new FallowingCamera(10);
+            Hero = new FallowingCamera(new Vector3(0, -50, 100));
+            Hero.SetPosition(0, 100f, -100f);
         }
 
         private void Form_MouseWheel(object sender, MouseEventArgs e)
@@ -685,13 +686,18 @@ namespace ModelRender
                 viewport.Width / viewport.Height, 
                 1.0f, 
                 1000.0f);
+            Hero.SetLens(
+                MathUtil.Pi / 3f,
+                viewport.Width / viewport.Height,
+                1.0f,
+                1000.0f);
             Player.Update();
             Hero.Update();
             World = Matrix.Identity;
             World *= Matrix.Scaling(Scalling);
-            World *= Matrix.RotationY(Hero.Angle.Y);
-            World *= Matrix.RotationX(Hero.Angle.X);
-            //World *= Matrix.Translation(Hero.Position);
+            World *= Matrix.Translation(Hero.Position);
+            //World *= Matrix.RotationY(Hero.Angle.Y);
+            //World *= Matrix.RotationX(Hero.Angle.X);
             constantBufferData.Wrold = World;
             constantBufferData.View = Player.View;
             constantBufferData.Project = Player.Project;
