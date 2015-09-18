@@ -50,7 +50,7 @@ namespace Render.Core
         /// <param shader="Shader"></param>
         /// <returns>Return false if the identity already exists.</returns>
         public delegate bool AddShader(string name, Shader shader);
-        public delegate void InitShaderHandler(AddShader Add);
+        public delegate void InitShaderHandler(AddShader add);
         public event InitShaderHandler InitShaderEvent = delegate { };
         private bool Add(string name, Shader shader)
         {
@@ -64,7 +64,7 @@ namespace Render.Core
         /// <param description="Pipeline Description"></param>
         /// <returns>Return false if the identity already exists.</returns>
         public delegate bool AddPipeline(string name, SharpDX.Direct3D12.GraphicsPipelineStateDescription description);
-        public delegate void InitPipelineHandler(AddPipeline Add, ConcurrentDictionary<string, Shader> shaders);
+        public delegate void InitPipelineHandler(AddPipeline add, ConcurrentDictionary<string, Shader> shaders);
         public event InitPipelineHandler InitPipelineEvent = delegate { };
         private bool Add(string name, SharpDX.Direct3D12.GraphicsPipelineStateDescription description)
         {
@@ -82,7 +82,7 @@ namespace Render.Core
         /// <param material="Material"></param>
         /// <returns>Return false if the identity already exists.</returns>
         public delegate bool AddMaterial(string name, Material material);
-        public delegate void InitMaterialHandler(AddMaterial Add);
+        public delegate void InitMaterialHandler(AddMaterial add);
         public event InitMaterialHandler InitMaterialEvent = delegate { };
         private bool Add(string name, Material material)
         {
@@ -96,7 +96,7 @@ namespace Render.Core
         /// <param model="Model"></param>
         /// <returns>Return false if the identity already exists.</returns>
         public delegate bool AddModel(string name, Model model);
-        public delegate void InitModelHandler(AddModel Add);
+        public delegate void InitModelHandler(AddModel add);
         public event InitModelHandler InitModelEvent = delegate { };
         private bool Add(string name, Model model)
         {
