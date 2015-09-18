@@ -46,7 +46,6 @@ namespace Render
                 renderTargets[n] = swapchain.GetBackBuffer<Resource>(n);
                 Engine.Instance.Device.CreateRenderTargetView(renderTargets[n], null, Heap.CPUDescriptorHandleForHeapStart + n* Step);
             }
-
             return Heap;
         }
     }

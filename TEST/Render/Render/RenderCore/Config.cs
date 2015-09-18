@@ -8,23 +8,13 @@ namespace Render
     [Serializable]
     public class Config
     {
-        public Config()
-        {
-            
-        }
-
-        public int FrameCount = 2;
-
-        public int Width = 800;
-        public int Height = 600;
-
-        public int RefreshRate = 60;
-
-        public Format Format = Format.R8G8B8A8_UNorm;
-
-        public int SampleCount = 1;
-
-        public int SampleQuality = 0;
+        public int    FrameCount            = 2;
+        public int    Width                 = 800;
+        public int    Height                = 600;
+        public int    RefreshRate           = 60;
+        public Format Format                = Format.R8G8B8A8_UNorm;
+        public int    SampleCount           = 1;
+        public int    SampleQuality         = 0;
 
         public void Serialize(string path)
         {

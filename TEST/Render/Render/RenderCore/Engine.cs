@@ -37,11 +37,13 @@ namespace Render
 
         public void Initialize()
         {
+            ResourceManager = new ResourceManager();
             Device = new Device(null, SharpDX.Direct3D.FeatureLevel.Level_11_0);
             GraphicCommandQueue = Device.CreateCommandQueue(new CommandQueueDescription(CommandListType.Direct));
             SwapChain = DxHelper.CreateSwapchain(Form, GraphicCommandQueue, Config);
             FrameIndex = SwapChain.CurrentBackBufferIndex;
             RenderTargetViewHeap = DxHelper.CreateRenderTargetViewHeap(Config, SwapChain, out RenderTargets);
+            // Create root signature
             // Initialize heaps srv ......etc
             ResourceManager.Initialize();
         }
