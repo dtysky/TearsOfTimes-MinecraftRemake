@@ -888,7 +888,7 @@ namespace ModelRender
                 1.0f, 
                 1000.0f);
             Player.Update();
-            constantBufferData.Wrold = Player.World;
+            constantBufferData.World = Player.World;
             constantBufferData.View = Player.View;
             constantBufferData.Project = Player.Project;
 

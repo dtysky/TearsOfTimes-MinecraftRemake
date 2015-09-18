@@ -15,19 +15,21 @@ namespace Render
         static void Main()
         {
             var form = new RenderForm("Render");
-            using (var app = new Core.Engine(form))
+            using (var engine = new Core.Engine(form))
             {
                 form.Width = 1440;
                 form.Height = 900;
                 form.Icon = null;
                 form.Show();
 
+                var TestCase = new Test(engine);
+
                 using (var loop = new RenderLoop(form))
                 {
                     while (loop.NextFrame())
                     {
-                        app.Update();
-                        app.Render();
+                        engine.Update();
+                        engine.Render();
                     }
                 }
             }

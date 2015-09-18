@@ -11,7 +11,12 @@ namespace Render.Core
     {
         public Engine(RenderForm form)
         {
+            Instance = this;
+        }
 
+        public void Init()
+        {
+            ResourceManager.Initialize();
         }
 
         public void Dispose()
@@ -29,6 +34,9 @@ namespace Render.Core
             
         }
 
-        public static Device Device { get; }
+        public static Engine Instance;
+
+        public Device Device { get; private set; }
+        public ResourceManager ResourceManager { get; private set; }
     }
 }
