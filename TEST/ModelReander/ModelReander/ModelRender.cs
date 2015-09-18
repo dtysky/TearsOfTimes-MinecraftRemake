@@ -122,7 +122,8 @@ namespace ModelRender
             form.KeyDown += Form_KeyDown;
             form.MouseMove += Form_MouseMove;
             form.MouseWheel += Form_MouseWheel;
-            Player.SetPosition(0, 100f, -100f);
+            Player.SetOffset(-1, -2);
+            Player.SetHero(Matrix.Scaling(Scalling));
         }
 
         private void Form_MouseWheel(object sender, MouseEventArgs e)
@@ -672,7 +673,7 @@ namespace ModelRender
                 1.0f, 
                 1000.0f);
             Player.Update();
-            constantBufferData.Wrold = Player.World * Matrix.Scaling(Scalling);
+            constantBufferData.Wrold = Player.World;
             constantBufferData.View = Player.View;
             constantBufferData.Project = Player.Project;
 

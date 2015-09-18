@@ -13,28 +13,41 @@ namespace ModelRender
             World = Matrix.Identity;
         }
 
-        public void SetOffset(Vector3 offset)
+        public void SetOffset(float cameraOffsetY, float cameraOffsetZ)
         {
-            Offset = offset;
+            OffsetY = cameraOffsetY;
+            OffsetZ = cameraOffsetZ;
         }
 
-        public void SetOffset(float x, float y, float z)
+        public void SetHero(Matrix heroWorld)
         {
-            Offset.X = x;
-            Offset.Y = y;
-            Offset.Z = z;
+            var HeroPosition = heroWorld.TranslationVector * heroWorld.ScaleVector;
+            var HeroForward = Vector3.Normalize(heroWorld.Forward);
+            var HeroUp = Vector3.Normalize(heroWorld.Up);
+            base.LookAt(HeroPosition - OffsetZ * HeroForward, HeroPosition, HeroUp);
         }
+        public Matrix MatrixCameraToWorld()
+        {
+            var result = new Matrix();
+            result.Row1 = new Vector4(Right, 0);
+            result.Row2 = new Vector4(Up, 0);
+            result.Row3 = new Vector4(Look, 0);
+            result.Row4 = new Vector4(Position, 1);
+            return result;
 
+        }
         public new void Update()
         {
             base.Update();
             //update World
-            World = Matrix.Translation(Position+Offset);
+            World = Matrix.Translation(0, OffsetY, -OffsetZ);
+            World *= MatrixCameraToWorld();
         }
 
         public Matrix World { get; private set; }
 
-        private Vector3 Offset = new Vector3(0, -100f, 100f);
+        private float OffsetY = -1f;
+        private float OffsetZ = -2f;
 
     }
 }

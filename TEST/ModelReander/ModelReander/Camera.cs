@@ -66,16 +66,6 @@ namespace ModelRender
             Up = Vector3.TransformNormal(Up, Rotate);
             Look = Vector3.TransformNormal(Look, Rotate);
         }
-        public Matrix MatrixCameraToWorld()
-        {
-            var result = new Matrix();
-            result.Row1 = new Vector4(Right, 0);
-            result.Row2 = new Vector4(Up, 0);
-            result.Row3 = new Vector4(Look, 0);
-            result.Row4 = new Vector4(Position, 1);
-            return result;
-                
-        }
         public void Update()
         {
             Vector3 R = Right;
@@ -121,6 +111,7 @@ namespace ModelRender
                 M34 = 0.0f,
                 M44 = 1.0f,
             };
+            
        
     }
 
