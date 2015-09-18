@@ -16,7 +16,7 @@ namespace Render.Core
 
         public ConcurrentDictionary<string, Shader>         Shaders         = new ConcurrentDictionary<string, Shader>();
 
-        public ConcurrentDictionary<string, Pipeline>       Pipelines       = new ConcurrentDictionary<string,Pipeline>();      
+        public ConcurrentDictionary<string, Pipeline>       Pipelines       = new ConcurrentDictionary<string, Pipeline>();      
 
         public ConcurrentDictionary<string, Material>       Materials       = new ConcurrentDictionary<string, Material>();
 
