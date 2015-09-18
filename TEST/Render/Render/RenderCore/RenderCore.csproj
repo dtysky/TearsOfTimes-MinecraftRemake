@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="Camera.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="DxHelper.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="Material.cs" />
     <Compile Include="Model.cs" />

@@ -10,56 +10,39 @@ namespace Render
     using SharpDX.DXGI;
     using SharpDX.Windows;
     using Device = SharpDX.Direct3D12.Device;
+    using Resource = SharpDX.Direct3D12.Resource;
 
     public class Engine : IDisposable
     {
         public Engine(RenderForm form)
         {
             Instance = this;
-            Init(form,Config.Default);
+            Config = Config.Default;
+            Form = form;
         }
 
         public Engine(RenderForm form, string path)
         {
-            Instance = this;           
-            Init(form,Config.Deserialize(path));
+            Instance = this;
+            Config = Config.Deserialize(path);
+            Form = form;
         }
 
         public Engine(RenderForm form, Config config)
         {
             Instance = this;
-            Init(form,config);
+            Config = config;
+            Form = form;
         }
 
-        private void Init(RenderForm form,Config config)
+        public void Initialize()
         {
-            // device, swap chain, render target and etc...
             Device = new Device(null, SharpDX.Direct3D.FeatureLevel.Level_11_0);
-            using (var Factory = new Factory4())
-            {
-                var QueueDesc = new CommandQueueDescription(CommandListType.Direct);
-                GraphicCommandQueue = Device.CreateCommandQueue(QueueDesc);
-
-                var swapChainDesc = new SwapChainDescription()
-                {
-                    BufferCount = config.FrameCount,
-                    ModeDescription = new ModeDescription(config.Width, config.Height, new Rational(config.RefreshRate, 1), config.Format),
-                    Usage = Usage.RenderTargetOutput,
-                    SwapEffect = SwapEffect.FlipDiscard,
-                    OutputHandle = form.Handle,
-                    SampleDescription = new SampleDescription(1, 0),
-                    IsWindowed = true
-                };
-
-                var tempSwapChain = new SwapChain(Factory, GraphicCommandQueue, swapChainDesc);
-                SwapChain = tempSwapChain.QueryInterface<SwapChain3>();
-                int frameIndex = SwapChain.CurrentBackBufferIndex;
-
-            }
-        }
-
-        public void InitEvents()
-        {
+            GraphicCommandQueue = Device.CreateCommandQueue(new CommandQueueDescription(CommandListType.Direct));
+            SwapChain = DxHelper.CreateSwapchain(Form, GraphicCommandQueue, Config);
+            FrameIndex = SwapChain.CurrentBackBufferIndex;
+            RenderTargetViewHeap = DxHelper.CreateRenderTargetViewHeap(Config, SwapChain, out RenderTargets);
+            // Initialize heaps srv ......etc
             ResourceManager.Initialize();
         }
 
@@ -76,13 +59,19 @@ namespace Render
         public void Render()
         {
             
-        }
+        }     
 
         public static Engine Instance { get; private set; }
-        public Device Device { get; private set; }
-        public SwapChain3 SwapChain { get; private set; }
+        public Config Config { get; private set; }
+        public RenderForm Form { get; private set; }
+        public Device Device { get; private set; }      
         public CommandQueue GraphicCommandQueue { get; private set; }
         public CommandQueue ComputeCommandQueue { get; private set; }
         public ResourceManager ResourceManager { get; private set; }
+
+        private SwapChain3 SwapChain;
+        private DescriptorHeap RenderTargetViewHeap;
+        private Resource[] RenderTargets;
+        private int FrameIndex;
     }
 }

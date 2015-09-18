@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 
 namespace Render
 {
+    using Format = SharpDX.DXGI.Format;
     [Serializable]
     public class Config
     {
@@ -19,7 +20,11 @@ namespace Render
 
         public int RefreshRate = 60;
 
-        public SharpDX.DXGI.Format Format = SharpDX.DXGI.Format.R8G8B8A8_UNorm;
+        public Format Format = Format.R8G8B8A8_UNorm;
+
+        public int SampleCount = 1;
+
+        public int SampleQuality = 0;
 
         public void Serialize(string path)
         {
