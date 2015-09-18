@@ -48,5 +48,41 @@ namespace Render
             }
             return Heap;
         }
+
+        public static RootSignature CreateRootSignature()
+        {
+            RootParameter[] Parameters = new RootParameter[23];
+            Parameters[0] = new RootParameter(ShaderVisibility.All, new RootConstants()
+            {
+                ShaderRegister = 0,
+                RegisterSpace = 0,
+                Value32BitCount = 1
+            });
+            Parameters[1] = new RootParameter(ShaderVisibility.All, new RootDescriptor()
+            {
+                ShaderRegister = 0,
+                RegisterSpace = 0
+            },RootParameterType.ConstantBufferView);
+            Parameters[2] = new RootParameter(ShaderVisibility.All, new RootDescriptor()
+            {
+                ShaderRegister = 0,
+                RegisterSpace = 0
+            }, RootParameterType.ShaderResourceView);
+            Parameters[3] = new RootParameter(ShaderVisibility.All, new RootDescriptor()
+            {
+                ShaderRegister = 0,
+                RegisterSpace = 0
+            }, RootParameterType.UnorderedAccessView);
+            Parameters[4] = new RootParameter(ShaderVisibility.All, new DescriptorRange()
+            {
+                RangeType = DescriptorRangeType.Sampler,
+                DescriptorCount = 1,
+                OffsetInDescriptorsFromTableStart = 0,
+                BaseShaderRegister = 0,
+                RegisterSpace = 0
+            });
+            RootSignatureDescription Description = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout, Parameters);
+            return Engine.Instance.Device.CreateRootSignature(0, Description.Serialize());
+        }
     }
 }

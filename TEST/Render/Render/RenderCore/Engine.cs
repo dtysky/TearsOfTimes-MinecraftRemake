@@ -43,6 +43,7 @@ namespace Render
             SwapChain = DxHelper.CreateSwapchain(Form, GraphicCommandQueue, Config);
             FrameIndex = SwapChain.CurrentBackBufferIndex;
             RenderTargetViewHeap = DxHelper.CreateRenderTargetViewHeap(Config, SwapChain, out RenderTargets);
+            RootSignature = DxHelper.CreateRootSignature();
             // Create root signature
             // Initialize heaps srv ......etc
             ResourceManager.Initialize();
@@ -67,6 +68,7 @@ namespace Render
         public Config Config { get; private set; }
         public RenderForm Form { get; private set; }
         public Device Device { get; private set; }      
+        public RootSignature RootSignature { get; private set; }
         public CommandQueue GraphicCommandQueue { get; private set; }
         public CommandQueue ComputeCommandQueue { get; private set; }
         public ResourceManager ResourceManager { get; private set; }

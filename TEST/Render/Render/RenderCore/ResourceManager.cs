@@ -109,7 +109,7 @@ namespace Render.Core
         {
             Pipeline pipeline = new Pipeline();
             pipeline.Description = description;
-            //pipeline.Description.RootSignature = ??? get the global root signature from somewhere
+            pipeline.Description.RootSignature = Engine.Instance.RootSignature;
             pipeline.State = Engine.Instance.Device.CreateGraphicsPipelineState(pipeline.Description);
             return Pipelines.TryAdd(name, pipeline);
         }
