@@ -12,15 +12,15 @@ namespace Render.Core
     {
         public ConcurrentDictionary<string, DescriptorHeap> DescriptorHeaps = new ConcurrentDictionary<string, DescriptorHeap>();
 
-        public ConcurrentDictionary<string, Resource> Resources = new ConcurrentDictionary<string, Resource>();
+        public ConcurrentDictionary<string, Resource>       Resources       = new ConcurrentDictionary<string, Resource>();
 
-        public ConcurrentDictionary<string, Shader> Shaders = new ConcurrentDictionary<string, Shader>();
+        public ConcurrentDictionary<string, Shader>         Shaders         = new ConcurrentDictionary<string, Shader>();
 
-        public ConcurrentDictionary<string, Pipeline> Pipelines = new ConcurrentDictionary<string,Pipeline>();      
+        public ConcurrentDictionary<string, Pipeline>       Pipelines       = new ConcurrentDictionary<string,Pipeline>();      
 
-        public ConcurrentDictionary<string, Material> Materials = new ConcurrentDictionary<string, Material>();
+        public ConcurrentDictionary<string, Material>       Materials       = new ConcurrentDictionary<string, Material>();
 
-        public ConcurrentDictionary<string, Model> Models = new ConcurrentDictionary<string, Model>();
+        public ConcurrentDictionary<string, Model>          Models          = new ConcurrentDictionary<string, Model>();
 
         /// <summary>
         /// Initialize all resources
