@@ -888,11 +888,7 @@ namespace ModelRender
                 1.0f, 
                 1000.0f);
             Player.Update();
-<<<<<<< HEAD
             constantBufferData.Wrold = Player.World;
-=======
-            constantBufferData.World = Player.World * Matrix.Scaling(Scalling);
->>>>>>> 92ef8d1f1b0467b767f9271209b95017ad9d169a
             constantBufferData.View = Player.View;
             constantBufferData.Project = Player.Project;
 
