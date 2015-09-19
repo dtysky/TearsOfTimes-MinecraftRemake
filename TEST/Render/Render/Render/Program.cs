@@ -23,6 +23,7 @@ namespace Render
                 form.Show();
 
                 var TestCase = new Test(engine);
+                TestCase.Initialize(); 
 
                 engine.Run();
             }

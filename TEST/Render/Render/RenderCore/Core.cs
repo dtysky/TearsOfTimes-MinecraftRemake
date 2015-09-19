@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Render
 {
+    using SharpDX;
     using SharpDX.Direct3D12;
     using SharpDX.DXGI;
     using SharpDX.Windows;
@@ -34,7 +35,18 @@ namespace Render
         }
 
         public void Initialize()
-        {     
+        {
+            Viewport = new ViewportF()
+            {
+                Width = Form.ClientSize.Width,
+                Height = Form.ClientSize.Height,
+                MaxDepth = 1.0f
+            };
+            ScissorRect = new Rectangle()
+            {
+                Right = Form.ClientSize.Width,
+                Bottom = Form.ClientSize.Height
+            };
             Device = new Device(null, SharpDX.Direct3D.FeatureLevel.Level_11_0);
             GraphicCommandQueue = Device.CreateCommandQueue(new CommandQueueDescription(CommandListType.Direct));
             SwapChain = DxHelper.CreateSwapchain(Form, GraphicCommandQueue, Config);
@@ -64,7 +76,12 @@ namespace Render
         {         
             Delegate[] Handlers = CommandListBuildHandler.GetInvocationList();
             CommandList[] List = new CommandList[Handlers.Length];
-            Parallel.For(0, Handlers.Length,Index => List[Index] = ((CommandListDelegate)(Handlers[Index]))());
+            Parallel.For(0, Handlers.Length,Index =>
+            {
+                ((CommandListDelegate)Handlers[Index])();
+                List[Index] = CommandPool[Index].CommandList;
+            });
+
             GraphicCommandQueue.ExecuteCommandLists(CommandPool.Count,List);
             SwapChain.Present(1, 0);
             WaitForPreviousFrame();
@@ -94,18 +111,23 @@ namespace Render
         public RootSignature RootSignature { get; private set; }
         public CommandQueue GraphicCommandQueue { get; private set; }
         public CommandQueue ComputeCommandQueue { get; private set; }
-        
 
-        private SwapChain3 SwapChain;
-        private DescriptorHeap RenderTargetViewHeap;
-        private Resource[] RenderTargets;
-        private int FrameIndex;
+        public ViewportF Viewport { get; private set; }
+        public Rectangle ScissorRect { get; private set; }
+
+
+        //======for test purpose======
+        public SwapChain3 SwapChain;
+        public DescriptorHeap RenderTargetViewHeap;        
+        public Resource[] RenderTargets;
+        public int FrameIndex;
+        //======for test purpose======
         private Fence Fence;
         private int FenceValue;
         private AutoResetEvent FenceEvent;
         private List<Command> CommandPool = new List<Command>();
 
-        public delegate GraphicsCommandList CommandListDelegate();
+        public delegate void CommandListDelegate();
         public event CommandListDelegate CommandListBuildHandler;
 
         public delegate void UpdateDelegate();

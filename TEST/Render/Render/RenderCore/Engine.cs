@@ -14,32 +14,41 @@ namespace Render
         {
             Instance = this;
             Core = new Core(form);
+            ResourceManager = new ResourceManager();
         }
 
         public Engine(RenderForm form,string path)
         {
             Instance = this;
             Core = new Core(form,path);
+            ResourceManager = new ResourceManager();
         }
 
         public Engine(RenderForm form, Config config)
         {
             Instance = this;
             Core = new Core(form, config);
+            ResourceManager = new ResourceManager();
         }
 
         public void Initialize()
         {
-            ResourceManager = new ResourceManager();
             Core.Initialize();
             // initialize scenes (upload srv cbf etc...)
             ResourceManager.Initialize();
-            Execute = new Thread(new ThreadStart(Loop));
+            //Execute = new Thread(new ThreadStart(Loop));
         }
 
         public void Run()
         {
-            Execute.Start();
+            using (var loop = new RenderLoop(Core.Form))
+            {
+                while (loop.NextFrame())
+                {
+                    Core.Update();
+                    Core.Render();
+                }
+            }
         }
 
         private void Loop()
@@ -56,10 +65,10 @@ namespace Render
 
         public void Dispose()
         {
-            Execute.Join();
+            //Execute.Join();
         }
 
-        private Thread Execute;
+        //private Thread Execute;
         public Core Core { get; private set; }
         public static Engine Instance { get; private set; }
         public ResourceManager ResourceManager { get; private set; }

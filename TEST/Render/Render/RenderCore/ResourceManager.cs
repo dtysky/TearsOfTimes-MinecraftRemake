@@ -28,8 +28,8 @@ namespace Render
         public void Initialize()
         {
             InitShaderEvent(Add);
-            InitPipelineEvent(Add,Shaders);           
-            InitDescriptorEvent(Add);
+            InitPipelineEvent(Add,Shaders);
+            InitDescriptorHeapEvent(Add);
             InitResourceEvent(Add, DescriptorHeaps);
             InitMaterialEvent(Add);
             InitModelEvent(Add);
@@ -72,7 +72,7 @@ namespace Render
         /// <returns>Return false if the identity already exists.</returns>
         public delegate bool AddDescriptorHeap(string name, DescriptorHeapDescription description);
         public delegate void InitDescriptorHeap(AddDescriptorHeap add);
-        public event InitDescriptorHeap InitDescriptorEvent = delegate { };
+        public event InitDescriptorHeap InitDescriptorHeapEvent = delegate { };
         private bool Add(string name, DescriptorHeapDescription description)
         {
             DescriptorHeap d = Engine.Instance.Core.Device.CreateDescriptorHeap(description);
