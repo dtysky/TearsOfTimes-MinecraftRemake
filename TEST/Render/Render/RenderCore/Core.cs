@@ -60,12 +60,11 @@ namespace Render
             PostProcess = new Command(null); 
         }
 
-        public Command CreateCommand(CommandListDelegate BuildHandler,Pipeline pipeline = null)
+        public void AddCommandList(CommandListDelegate BuildHandler,Pipeline pipeline = null)
         {
             CommandListBuildHandler += BuildHandler;
             Command C = new Command(pipeline);
             CommandPool.Add(C);
-            return C;
         }
 
         public void Update()
@@ -83,7 +82,7 @@ namespace Render
             List[Handlers.Length+1] = PostProcess.CommandList;
             Parallel.For(0, Handlers.Length,Index =>
             {
-                ((CommandListDelegate)Handlers[Index])();
+                ((CommandListDelegate)Handlers[Index])(CommandPool[Index].CommandList,CommandPool[Index].Allocator);
                 List[Index+1] = CommandPool[Index].CommandList;
             });
 
@@ -157,7 +156,7 @@ namespace Render
         private Command PreProcess;
         private Command PostProcess;
 
-        public delegate void CommandListDelegate();
+        public delegate void CommandListDelegate(GraphicsCommandList commandList,CommandAllocator allocator);
         public event CommandListDelegate CommandListBuildHandler;
 
         public delegate void UpdateDelegate();
