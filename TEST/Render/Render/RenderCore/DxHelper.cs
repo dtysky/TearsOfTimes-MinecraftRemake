@@ -49,7 +49,19 @@ namespace Render
 
         public static RootSignature CreateRootSignature()
         {
-            RootSignatureDescription Description = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout);
+            RootSignatureDescription Description = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout,
+                // Root Parameters
+                new[]
+                {
+                    new RootParameter(ShaderVisibility.Vertex,
+                        new DescriptorRange()
+                        {
+                            RangeType = DescriptorRangeType.ConstantBufferView,
+                            BaseShaderRegister = 0,
+                            OffsetInDescriptorsFromTableStart = int.MinValue,
+                            DescriptorCount = 1
+                        })
+                });
             return Engine.Instance.Core.Device.CreateRootSignature(Description.Serialize());
         }
     }

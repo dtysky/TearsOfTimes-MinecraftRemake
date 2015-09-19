@@ -9,6 +9,7 @@ namespace Render
     using SharpDX.Direct3D12;
     using SharpDX.DXGI;
     using SharpDX.Windows;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
     using Device = SharpDX.Direct3D12.Device;
@@ -34,6 +35,11 @@ namespace Render
             Config = config;          
         }
 
+        [ConditionalAttribute("DEBUG")]
+        private void EnableDebug()
+        {
+            DebugInterface.Get().EnableDebugLayer();
+        }
         public void Initialize()
         {
             Viewport = new ViewportF()
@@ -47,9 +53,7 @@ namespace Render
                 Right = Form.ClientSize.Width,
                 Bottom = Form.ClientSize.Height
             };
-            //=======for debug purpose=============
-            DebugInterface.Get().EnableDebugLayer();
-            //=====================================
+            EnableDebug();
             Device = new Device(null, SharpDX.Direct3D.FeatureLevel.Level_11_0);
             GraphicCommandQueue = Device.CreateCommandQueue(new CommandQueueDescription(CommandListType.Direct));
             SwapChain = DxHelper.CreateSwapchain(Form, GraphicCommandQueue, Config);
