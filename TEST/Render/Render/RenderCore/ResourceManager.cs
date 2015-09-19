@@ -1,26 +1,26 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Render
 {
     using SharpDX.Direct3D12;
     public class ResourceManager : IDisposable
     {
-        public ConcurrentDictionary<string, DescriptorHeap> DescriptorHeaps = new ConcurrentDictionary<string, DescriptorHeap>();
+        public ConcurrentDictionary<string, DescriptorHeap>    DescriptorHeaps = new ConcurrentDictionary<string, DescriptorHeap>();
+                                                               
+        public ConcurrentDictionary<string, Resource>          Resources       = new ConcurrentDictionary<string, Resource>();
+                                                               
+        public ConcurrentDictionary<string, Shader>            Shaders         = new ConcurrentDictionary<string, Shader>();
+                                                               
+        public ConcurrentDictionary<string, Pipeline>          Pipelines       = new ConcurrentDictionary<string, Pipeline>();
 
-        public ConcurrentDictionary<string, Resource>       Resources       = new ConcurrentDictionary<string, Resource>();
+        public ConcurrentDictionary<string, VertexBufferView>  Vertices        = new ConcurrentDictionary<string, VertexBufferView>();
 
-        public ConcurrentDictionary<string, Shader>         Shaders         = new ConcurrentDictionary<string, Shader>();
+        public ConcurrentDictionary<string, IndexBufferView>   Indices         = new ConcurrentDictionary<string, IndexBufferView>();
 
-        public ConcurrentDictionary<string, Pipeline>       Pipelines       = new ConcurrentDictionary<string, Pipeline>();      
-
-        public ConcurrentDictionary<string, Material>       Materials       = new ConcurrentDictionary<string, Material>();
-
-        public ConcurrentDictionary<string, Model>          Models          = new ConcurrentDictionary<string, Model>();
+        public ConcurrentDictionary<string, Material>          Materials       = new ConcurrentDictionary<string, Material>();
+                                                               
+        public ConcurrentDictionary<string, Model>             Models          = new ConcurrentDictionary<string, Model>();
 
         /// <summary>
         /// Initialize all resources
@@ -31,6 +31,10 @@ namespace Render
             InitPipelineEvent(Add,Shaders);
             InitDescriptorHeapEvent(Add);
             InitResourceEvent(Add, DescriptorHeaps);
+
+            InitVertexEvent(Add);
+            InitIndexEvent(Add);
+
             InitMaterialEvent(Add);
             InitModelEvent(Add);
         }
@@ -51,20 +55,6 @@ namespace Render
         }
 
         /// <summary>
-        /// Add shader to resource manager
-        /// </summary>
-        /// <param name="Identity"></param>
-        /// <param shader="Shader"></param>
-        /// <returns>Return false if the identity already exists.</returns>
-        public delegate bool AddResource(string name, Resource resource);
-        public delegate void InitResourceHandler(AddShader add, ConcurrentDictionary<string, DescriptorHeap> heaps);
-        public event InitResourceHandler InitResourceEvent = delegate { };
-        private bool Add(string name, Resource resource)
-        {
-            return Resources.TryAdd(name, resource);
-        }
-
-        /// <summary>
         /// Add description heap to resource manager
         /// </summary>
         /// <param name="Identity"></param>
@@ -80,6 +70,20 @@ namespace Render
                 return true;
             d.Dispose();
             return false;
+        }
+
+        /// <summary>
+        /// Add shader to resource manager
+        /// </summary>
+        /// <param name="Identity"></param>
+        /// <param shader="Shader"></param>
+        /// <returns>Return false if the identity already exists.</returns>
+        public delegate bool AddResource(string name, Resource resource);
+        public delegate void InitResourceHandler(AddResource add, ConcurrentDictionary<string, DescriptorHeap> heaps);
+        public event InitResourceHandler InitResourceEvent = delegate { };
+        private bool Add(string name, Resource resource)
+        {
+            return Resources.TryAdd(name, resource);
         }
 
         /// <summary>
@@ -109,9 +113,40 @@ namespace Render
         {
             Pipeline pipeline = new Pipeline();
             pipeline.Description = description;
-            pipeline.Description.RootSignature = Engine.Instance.Core.RootSignature;
-            pipeline.State = Engine.Instance.Core.Device.CreateGraphicsPipelineState(pipeline.Description);
+            pipeline.State = Engine.Instance.Core.Device.CreateGraphicsPipelineState(description);
             return Pipelines.TryAdd(name, pipeline);
+        }
+
+        /// <summary>
+        /// Add vertices to resource manager
+        /// </summary>
+        /// <param name="Identity"></param>
+        /// <param vertex="Vertex"></param>
+        /// <returns>Return false if the identity already exists.</returns>
+        public delegate bool AddVertex(string name, VertexBufferView vertex, Resource data);
+        public delegate void InitVertexHandler(AddVertex add);
+        public event InitVertexHandler InitVertexEvent = delegate { };
+        private bool Add(string name, VertexBufferView vertex, Resource data)
+        {
+            bool result = Resources.TryAdd(name, data);
+            result = (result == true) ? Vertices.TryAdd(name, vertex) : false;
+            return result;
+        }
+
+        /// <summary>
+        /// Add indices to resource manager
+        /// </summary>
+        /// <param name="Identity"></param>
+        /// <param index="Index"></param>
+        /// <returns>Return false if the identity already exists.</returns>
+        public delegate bool AddIndex(string name, IndexBufferView index, Resource data);
+        public delegate void InitIndexHandler(AddIndex add);
+        public event InitIndexHandler InitIndexEvent = delegate { };
+        private bool Add(string name, IndexBufferView index, Resource data)
+        {
+            bool result = Resources.TryAdd(name, data);
+            result = (result == true) ? Indices.TryAdd(name, index) : false;
+            return result;
         }
 
         /// <summary>

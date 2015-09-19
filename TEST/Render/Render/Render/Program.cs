@@ -17,8 +17,8 @@ namespace Render
             var form = new RenderForm("Render");
             using (var engine = new Engine(form))
             {
-                form.Width = 1440;
-                form.Height = 900;
+                form.Width = 800;
+                form.Height = 600;
                 form.Icon = null;
                 form.Show();
 

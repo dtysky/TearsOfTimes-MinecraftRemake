@@ -49,6 +49,10 @@
     <Reference Include="SharpDX.Direct3D12">
       <HintPath>..\Libs\SharpDx\SharpDX.Direct3D12.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.DXGI, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\SharpDx\SharpDX.DXGI.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX.Mathematics, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -91,6 +95,9 @@
       <Project>{cc2a2d28-8bca-4965-b6c1-0ae2f26dd040}</Project>
       <Name>RenderCore</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="shader.hlsl" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

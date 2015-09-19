@@ -1,11 +1,7 @@
 ﻿using SharpDX.Direct3D12;
 using SharpDX.DXGI;
 using SharpDX.Windows;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Render
 {
@@ -27,7 +23,9 @@ namespace Render
                     IsWindowed = true
                 };
                 var tempSwapChain = new SwapChain(Factory, queue, swapChainDesc);
-                return tempSwapChain.QueryInterface<SwapChain3>();              
+                var SwapChain = tempSwapChain.QueryInterface<SwapChain3>();
+                tempSwapChain.Dispose();
+                return SwapChain;
             }
         }
 
@@ -51,17 +49,8 @@ namespace Render
 
         public static RootSignature CreateRootSignature()
         {
-            RootParameter[] Parameters = new RootParameter[1];
-            Parameters[0] = new RootParameter(ShaderVisibility.Vertex,
-                        new DescriptorRange()
-                        {
-                            RangeType = DescriptorRangeType.ConstantBufferView,
-                            BaseShaderRegister = 0,
-                            OffsetInDescriptorsFromTableStart = int.MinValue,
-                            DescriptorCount = 1
-                        });
-            RootSignatureDescription Description = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout, Parameters);
-            return Engine.Instance.Core.Device.CreateRootSignature(0, Description.Serialize());
+            RootSignatureDescription Description = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout);
+            return Engine.Instance.Core.Device.CreateRootSignature(Description.Serialize());
         }
     }
 }
