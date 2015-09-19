@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Render
 {
-    public class Command
+    public class Command : IDisposable
     {
         public Command(Pipeline pipeline = null)
         {
@@ -19,5 +19,11 @@ namespace Render
 
         public CommandAllocator Allocator { get; private set; }
         public GraphicsCommandList CommandList { get; private set; }
+
+        public void Dispose()
+        {
+            Allocator.Dispose();
+            CommandList.Dispose();
+        }
     }
 }

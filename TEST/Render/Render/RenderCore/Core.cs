@@ -56,6 +56,8 @@ namespace Render
             Fence = Device.CreateFence(0, FenceFlags.None);
             FenceValue = 1;
             FenceEvent = new AutoResetEvent(false);
+            PreProcess = new Command(null); 
+            PostProcess = new Command(null); 
         }
 
         public Command CreateCommand(CommandListDelegate BuildHandler,Pipeline pipeline = null)
@@ -73,18 +75,41 @@ namespace Render
         }
 
         public void Render()
-        {         
+        {
+            InitFrame();
             Delegate[] Handlers = CommandListBuildHandler.GetInvocationList();
-            CommandList[] List = new CommandList[Handlers.Length];
+            CommandList[] List = new CommandList[Handlers.Length+2];
+            List[0] = PreProcess.CommandList;
+            List[Handlers.Length+1] = PostProcess.CommandList;
             Parallel.For(0, Handlers.Length,Index =>
             {
                 ((CommandListDelegate)Handlers[Index])();
-                List[Index] = CommandPool[Index].CommandList;
+                List[Index+1] = CommandPool[Index].CommandList;
             });
 
-            GraphicCommandQueue.ExecuteCommandLists(CommandPool.Count,List);
+            GraphicCommandQueue.ExecuteCommandLists(CommandPool.Count+2,List);
             SwapChain.Present(1, 0);
             WaitForPreviousFrame();
+        }
+
+        private void InitFrame()
+        {
+            var rtvHandle = RenderTargetViewHeap.CPUDescriptorHandleForHeapStart;
+            rtvHandle += FrameIndex * Device.GetDescriptorHandleIncrementSize(DescriptorHeapType.RenderTargetView);
+
+            PreProcess.Allocator.Reset();
+            PreProcess.CommandList.Reset(PreProcess.Allocator, null);
+            PreProcess.CommandList.ClearRenderTargetView(rtvHandle, new Color4(0, 0.2F, 0.4f, 1), 0, null);
+            PreProcess.CommandList.SetRenderTargets(1, rtvHandle, false, null);
+            PreProcess.CommandList.SetViewport(Viewport);
+            PreProcess.CommandList.SetScissorRectangles(ScissorRect);
+            PreProcess.CommandList.ResourceBarrierTransition(RenderTargets[FrameIndex], ResourceStates.Present, ResourceStates.RenderTarget);
+            PreProcess.CommandList.Close();
+
+            PostProcess.Allocator.Reset();
+            PostProcess.CommandList.Reset(PostProcess.Allocator, null);
+            PostProcess.CommandList.ResourceBarrierTransition(RenderTargets[FrameIndex], ResourceStates.RenderTarget, ResourceStates.Present);
+            PostProcess.CommandList.Close();
         }
 
         private void WaitForPreviousFrame()
@@ -102,7 +127,12 @@ namespace Render
 
         public void Dispose()
         {
-
+            PreProcess.Dispose();
+            PostProcess.Dispose();
+            foreach (var C in CommandPool)
+                C.Dispose();
+            RenderTargetViewHeap.Dispose();
+            SwapChain.Dispose();
         }
 
         public Config Config { get; private set; }
@@ -116,16 +146,16 @@ namespace Render
         public Rectangle ScissorRect { get; private set; }
 
 
-        //======for test purpose======
-        public SwapChain3 SwapChain;
-        public DescriptorHeap RenderTargetViewHeap;        
-        public Resource[] RenderTargets;
-        public int FrameIndex;
-        //======for test purpose======
+        private SwapChain3 SwapChain;
+        private DescriptorHeap RenderTargetViewHeap;        
+        private Resource[] RenderTargets;
+        private int FrameIndex;
         private Fence Fence;
         private int FenceValue;
         private AutoResetEvent FenceEvent;
         private List<Command> CommandPool = new List<Command>();
+        private Command PreProcess;
+        private Command PostProcess;
 
         public delegate void CommandListDelegate();
         public event CommandListDelegate CommandListBuildHandler;

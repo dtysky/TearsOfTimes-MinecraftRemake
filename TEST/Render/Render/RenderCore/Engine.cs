@@ -66,6 +66,8 @@ namespace Render
         public void Dispose()
         {
             //Execute.Join();
+            Core.Dispose();
+            ResourceManager.Dispose();
         }
 
         //private Thread Execute;
