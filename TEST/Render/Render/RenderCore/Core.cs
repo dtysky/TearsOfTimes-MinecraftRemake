@@ -43,8 +43,9 @@ namespace Render
             RootSignature = DxHelper.CreateRootSignature();
         }
 
-        public Command CreateCommand(Pipeline pipeline = null)
+        public Command CreateCommand(CommandListDelegate BuildHandler,Pipeline pipeline = null)
         {
+            CommandListBuildHandler += BuildHandler;
             Command C = new Command(pipeline);
             CommandPool.Add(C);
             return C;
