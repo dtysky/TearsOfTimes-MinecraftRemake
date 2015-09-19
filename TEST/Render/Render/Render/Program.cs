@@ -24,14 +24,7 @@ namespace Render
 
                 var TestCase = new Test(engine);
 
-                using (var loop = new RenderLoop(form))
-                {
-                    while (loop.NextFrame())
-                    {
-                        engine.Update();
-                        engine.Render();
-                    }
-                }
+                engine.Run();
             }
         }
     }

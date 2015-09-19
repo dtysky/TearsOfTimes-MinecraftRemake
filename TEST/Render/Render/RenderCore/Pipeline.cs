@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Render.Core
+namespace Render
 {
     using SharpDX.Direct3D12;
     using ShaderBytecode = SharpDX.Direct3D12.ShaderBytecode;

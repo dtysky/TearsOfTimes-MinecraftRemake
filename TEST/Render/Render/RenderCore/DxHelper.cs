@@ -33,18 +33,18 @@ namespace Render
 
         public static DescriptorHeap CreateRenderTargetViewHeap(Config config, SwapChain3 swapchain, out Resource[] renderTargets)
         {          
-            var Heap = Engine.Instance.Device.CreateDescriptorHeap(new DescriptorHeapDescription()
+            var Heap = Engine.Instance.Core.Device.CreateDescriptorHeap(new DescriptorHeapDescription()
             {
                 DescriptorCount = config.FrameCount,
                 Flags = DescriptorHeapFlags.None,
                 Type = DescriptorHeapType.RenderTargetView
             });
             renderTargets = new Resource[config.FrameCount];
-            int Step = Engine.Instance.Device.GetDescriptorHandleIncrementSize(DescriptorHeapType.RenderTargetView);
+            int Step = Engine.Instance.Core.Device.GetDescriptorHandleIncrementSize(DescriptorHeapType.RenderTargetView);
             for (int n = 0; n < config.FrameCount; n++)
             {
                 renderTargets[n] = swapchain.GetBackBuffer<Resource>(n);
-                Engine.Instance.Device.CreateRenderTargetView(renderTargets[n], null, Heap.CPUDescriptorHandleForHeapStart + n* Step);
+                Engine.Instance.Core.Device.CreateRenderTargetView(renderTargets[n], null, Heap.CPUDescriptorHandleForHeapStart + n* Step);
             }
             return Heap;
         }
@@ -82,7 +82,7 @@ namespace Render
                 RegisterSpace = 0
             });
             RootSignatureDescription Description = new RootSignatureDescription(RootSignatureFlags.AllowInputAssemblerInputLayout, Parameters);
-            return Engine.Instance.Device.CreateRootSignature(0, Description.Serialize());
+            return Engine.Instance.Core.Device.CreateRootSignature(0, Description.Serialize());
         }
     }
 }

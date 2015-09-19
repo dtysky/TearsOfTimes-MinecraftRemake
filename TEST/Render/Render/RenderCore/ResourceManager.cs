@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Render.Core
+namespace Render
 {
     using SharpDX.Direct3D12;
     public class ResourceManager : IDisposable
@@ -75,7 +75,7 @@ namespace Render.Core
         public event InitDescriptorHeap InitDescriptorEvent = delegate { };
         private bool Add(string name, DescriptorHeapDescription description)
         {
-            DescriptorHeap d = Engine.Instance.Device.CreateDescriptorHeap(description);
+            DescriptorHeap d = Engine.Instance.Core.Device.CreateDescriptorHeap(description);
             if (DescriptorHeaps.TryAdd(name, d))
                 return true;
             d.Dispose();
@@ -109,8 +109,8 @@ namespace Render.Core
         {
             Pipeline pipeline = new Pipeline();
             pipeline.Description = description;
-            pipeline.Description.RootSignature = Engine.Instance.RootSignature;
-            pipeline.State = Engine.Instance.Device.CreateGraphicsPipelineState(pipeline.Description);
+            pipeline.Description.RootSignature = Engine.Instance.Core.RootSignature;
+            pipeline.State = Engine.Instance.Core.Device.CreateGraphicsPipelineState(pipeline.Description);
             return Pipelines.TryAdd(name, pipeline);
         }
 

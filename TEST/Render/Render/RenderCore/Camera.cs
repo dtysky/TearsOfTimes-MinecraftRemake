@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Render.Core
+namespace Render
 {
     using SharpDX;
     class Camera

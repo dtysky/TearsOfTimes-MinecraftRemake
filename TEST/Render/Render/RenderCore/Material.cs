@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Render.Core
+namespace Render
 {
     public class Material
     {

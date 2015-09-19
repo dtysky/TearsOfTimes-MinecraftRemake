@@ -1,81 +1,67 @@
-﻿using System;
+﻿using SharpDX.Windows;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Render
 {
-    using Core;
-    using SharpDX.Direct3D12;
-    using SharpDX.DXGI;
-    using SharpDX.Windows;
-    using Device = SharpDX.Direct3D12.Device;
-    using Resource = SharpDX.Direct3D12.Resource;
-
     public class Engine : IDisposable
     {
         public Engine(RenderForm form)
         {
             Instance = this;
-            Config = Config.Default;
-            Form = form;
+            Core = new Core(form);
         }
 
-        public Engine(RenderForm form, string path)
+        public Engine(RenderForm form,string path)
         {
             Instance = this;
-            Config = Config.Deserialize(path);
-            Form = form;
+            Core = new Core(form,path);
         }
 
         public Engine(RenderForm form, Config config)
         {
             Instance = this;
-            Config = config;
-            Form = form;
+            Core = new Core(form, config);
         }
 
         public void Initialize()
         {
             ResourceManager = new ResourceManager();
-            Device = new Device(null, SharpDX.Direct3D.FeatureLevel.Level_11_0);
-            GraphicCommandQueue = Device.CreateCommandQueue(new CommandQueueDescription(CommandListType.Direct));
-            SwapChain = DxHelper.CreateSwapchain(Form, GraphicCommandQueue, Config);
-            FrameIndex = SwapChain.CurrentBackBufferIndex;
-            RenderTargetViewHeap = DxHelper.CreateRenderTargetViewHeap(Config, SwapChain, out RenderTargets);
-            RootSignature = DxHelper.CreateRootSignature();
-            // Create root signature
-            // Initialize heaps srv ......etc
+            Core.Initialize();
+            // initialize scenes (upload srv cbf etc...)
             ResourceManager.Initialize();
+            Execute = new Thread(new ThreadStart(Loop));
+        }
+
+        public void Run()
+        {
+            Execute.Start();
+        }
+
+        private void Loop()
+        {
+            using (var loop = new RenderLoop(Core.Form))
+            {
+                while (loop.NextFrame())
+                {
+                    Core.Update();
+                    Core.Render();
+                }
+            }
         }
 
         public void Dispose()
         {
-            
+            Execute.Join();
         }
 
-        public void Update()
-        {
-            
-        }
-
-        public void Render()
-        {
-            
-        }     
-
+        private Thread Execute;
+        public Core Core { get; private set; }
         public static Engine Instance { get; private set; }
-        public Config Config { get; private set; }
-        public RenderForm Form { get; private set; }
-        public Device Device { get; private set; }      
-        public RootSignature RootSignature { get; private set; }
-        public CommandQueue GraphicCommandQueue { get; private set; }
-        public CommandQueue ComputeCommandQueue { get; private set; }
         public ResourceManager ResourceManager { get; private set; }
-
-        private SwapChain3 SwapChain;
-        private DescriptorHeap RenderTargetViewHeap;
-        private Resource[] RenderTargets;
-        private int FrameIndex;
     }
 }
