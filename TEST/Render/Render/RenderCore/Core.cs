@@ -41,6 +41,9 @@ namespace Render
             FrameIndex = SwapChain.CurrentBackBufferIndex;
             RenderTargetViewHeap = DxHelper.CreateRenderTargetViewHeap(Config, SwapChain, out RenderTargets);
             RootSignature = DxHelper.CreateRootSignature();
+            Fence = Device.CreateFence(0, FenceFlags.None);
+            FenceValue = 1;
+            FenceEvent = new AutoResetEvent(false);
         }
 
         public Command CreateCommand(CommandListDelegate BuildHandler,Pipeline pipeline = null)
