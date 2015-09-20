@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Render.Core
+namespace Render
 {
     using Assimp;
     public class Model
     {
         private Model()
         {
-            Components = new List<ModelComponent>();
+            //Components = new List<ModelComponent>();
         }
 
 

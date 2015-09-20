@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Render.Core
+namespace Render
 {
     using Assimp;
     using SharpDX;
-    using Render.Core;
     using SharpDX.Direct3D12;
     using System.Runtime.InteropServices;
 
@@ -120,17 +119,17 @@ namespace Render.Core
 
         public void WriteLight(Device device, DescriptorHeap shaderRenderViewHeap)
         {
-            var bufferData = Light;
             var bufferDesc = ResourceDescription.Buffer(new ResourceAllocationInformation(), ResourceFlags.None);
+            IntPtr bufferData = Utilities.AllocateMemory(Utilities.SizeOf<MaterialLight>());
+            Utilities.Write(bufferData, ref Light);         
             var buffer = device.CreateCommittedResource(
                 new HeapProperties(HeapType.Upload),
                 HeapFlags.None,
                 bufferDesc,
                 ResourceStates.GenericRead, null);
-            var handle = GCHandle.Alloc(bufferData, GCHandleType.Pinned);
-            var ptr = Marshal.UnsafeAddrOfPinnedArrayElement(bufferData, 0);
-            buffer.WriteToSubresource(0, null, ptr, tex.Width * tex.PixelWdith, textureData.Length);
-            handle.Free();
+            buffer.WriteToSubresource(0, null, bufferData, width * pixelwidth, length);
+
+
             device.CreateShaderResourceView(
                 buffer,
                 new ShaderResourceViewDescription
