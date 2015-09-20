@@ -15,145 +15,113 @@ namespace Render
     {
         private Material()
         {
-            TextureCount = 0;
             ViewStep = 0;
-            Light = new MaterialLight();
+            Color = new MaterialColor();
+            TextureFlags = 0;
+            ColorFlags = 0;
         }
 
-        public int Initialize(string rootPath, int viewStep, Assimp.Material meterial)
+        public int Initialize(string rootPath, string modelName, int viewStep, Assimp.Material meterial)
         {
-            Name = meterial.Name;
-            if (meterial.TextureDiffuse.FilePath != null)
+            Name = modelName + "." + meterial.Name;
+            ViewStep = viewStep;
+            Color.Opacity = meterial.Opacity;
+            Color.Shininess = meterial.Shininess;
+            for(int i = 0; i < 4; i++)
             {
-                TexturePath = meterial.TextureDiffuse.FilePath.Split('*');
-                TextureCount = TexturePath.Length;
-                for (int i = 0; i < TextureCount; i++)
-                {
-                    TexturePath[i] = rootPath + TexturePath[i];
-                }
+                Color.Ambient[i] = meterial.ColorAmbient[i];
+                Color.Diffuse[i] = meterial.ColorDiffuse[i];
+                Color.Emissive[i] = meterial.ColorEmissive[i];
+                Color.Reflective[i] = meterial.ColorReflective[i];
+                Color.Specular[i] = meterial.ColorSpecular[i];
+                Color.Transparent[i] = meterial.ColorTransparent[i];
+            }
+            SetTexture(rootPath, meterial);
+            return viewStep + 5 * Engine.Instance.Core.Device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView);
+        }
+
+        public void SetTexture(string rootPath, Assimp.Material meterial)
+        {
+            SetTexture(rootPath, meterial.TextureDiffuse.FilePath, TextureType.Diffuse);
+            SetTexture(rootPath, meterial.TextureNormal.FilePath, TextureType.Normal);
+            SetTexture(rootPath, meterial.TextureDiffuse.FilePath, TextureType.Gamma);
+            SetTexture(rootPath, meterial.TextureDiffuse.FilePath, TextureType.Shadow);
+            SetTexture(rootPath, meterial.TextureDiffuse.FilePath, TextureType.Bump);
+        }
+
+        public void SetTexture(string rootPath, string texturePath, TextureType type)
+        {
+            if (texturePath != null)
+            {
+                TexturePath[type] = rootPath + texturePath;
+                HasTexture[type] = true;
+                TextureFlags |= 1 << (int)type;
             }
             else
             {
-                TextureCount = 0;
+                //nothing changed
             }
-            ViewStep = viewStep;
-            Light.Opacity = meterial.Opacity;
-            Light.Shininess = meterial.Shininess;
-            Light.ShininessStrength = meterial.ShininessStrength;
-            for(int i = 0; i < 4; i++)
-            {
-                Light.Ambient[i] = meterial.ColorAmbient[i];
-                Light.Diffuse[i] = meterial.ColorDiffuse[i];
-                Light.Emissive[i] = meterial.ColorEmissive[i];
-                Light.Reflective[i] = meterial.ColorReflective[i];
-                Light.Specular[i] = meterial.ColorSpecular[i];
-                Light.Transparent[i] = meterial.ColorTransparent[i];
-            }
-            return TextureCount + 1;
         }
 
-        public void WriteToResource(Device device, DescriptorHeap shaderRenderViewHeap)
+        public void WriteTextureToRAM(DescriptorHeap shaderRenderViewHeap)
         {
-            //for (int i = 0; i < TextureCount; i++)
-            //{
-            //    var tex = Texture.LoadFromFile(TexturePath[i]);
-            //    var textureData = tex.Data;
-            //    var textureDesc = ResourceDescription.Texture2D(tex.ColorFormat, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
-            //    var texture = device.CreateCommittedResource(
-            //        new HeapProperties(HeapType.Upload),
-            //        HeapFlags.None,
-            //        textureDesc,
-            //        ResourceStates.GenericRead, null);
-            //    var handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
-            //    var ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
-            //    texture.WriteToSubresource(0, null, ptr, tex.Width * tex.PixelWdith, textureData.Length);
-            //    handle.Free();
-            //    device.CreateShaderResourceView(
-            //        texture,
-            //        new ShaderResourceViewDescription
-            //        {
-            //            Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
-            //            Format = textureDesc.Format,
-            //            Dimension = ShaderResourceViewDimension.Texture2D,
-            //            Texture2D =
-            //            {
-            //                    MipLevels = 1,
-            //                    MostDetailedMip = 0,
-            //                    PlaneSlice = 0,
-            //                    ResourceMinLODClamp = 0.0f
-            //            }
-            //        },
-            //        shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + ViewStep + i * device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));
-            //}
-        }
-
-        public bool SetTexture(string rootPath, string texturePath)
-        {
-            if (texturePath != null && texturePath.Count(c => c == '*') == TextureCount - 1)
+            for (TextureType type = TextureType.Diffuse; type < TextureType.Bump; type++)
             {
-                TexturePath = texturePath.Split('*');
-                TextureCount = TexturePath.Length;
-                for (int i = 0; i < TextureCount; i++)
+                if (!HasTexture[type])
                 {
-                    TexturePath[i] = rootPath + TexturePath[i];
+                    continue;
                 }
-                return true;
+                WriteTextureToRAM(shaderRenderViewHeap, type);
             }
-            return false;
         }
 
-        public void WriteTexture(Device device, DescriptorHeap shaderRenderViewHeap)
+        public void WriteTextureToRAM(DescriptorHeap shaderRenderViewHeap, TextureType type)
         {
-
-        }
-
-        public void WriteTexture(Device device, DescriptorHeap shaderRenderViewHeap, int offset)
-        {
-
-        }
-
-        public void SetLight(MaterialLight light)
-        {
-            Light = light;
-        }
-
-        public void WriteLight(Device device, DescriptorHeap shaderRenderViewHeap)
-        {
-            var bufferDesc = ResourceDescription.Buffer(new ResourceAllocationInformation(), ResourceFlags.None);
-            IntPtr bufferData = Utilities.AllocateMemory(Utilities.SizeOf<MaterialLight>());
-            Utilities.Write(bufferData, ref Light);         
-            var buffer = device.CreateCommittedResource(
+            var tex = Texture.LoadFromFile(TexturePath[type]);
+            var textureData = tex.Data;
+            var textureDesc = ResourceDescription.Texture2D(tex.ColorFormat, tex.Width, tex.Height, 1, 1, 1, 0, ResourceFlags.None, TextureLayout.Unknown, 0);
+            var texture = Engine.Instance.Core.Device.CreateCommittedResource(
                 new HeapProperties(HeapType.Upload),
                 HeapFlags.None,
-                bufferDesc,
+                textureDesc,
                 ResourceStates.GenericRead, null);
-            buffer.WriteToSubresource(0, null, bufferData, width * pixelwidth, length);
-
-
-            device.CreateShaderResourceView(
-                buffer,
+            var handle = GCHandle.Alloc(textureData, GCHandleType.Pinned);
+            var ptr = Marshal.UnsafeAddrOfPinnedArrayElement(textureData, 0);
+            texture.WriteToSubresource(0, null, ptr, tex.Width * tex.PixelWdith, textureData.Length);
+            Marshal.FreeHGlobal(ptr);
+            handle.Free();
+            Engine.Instance.Core.Device.CreateShaderResourceView(
+                texture,
                 new ShaderResourceViewDescription
                 {
                     Shader4ComponentMapping = ((((0) & 0x7) | (((1) & 0x7) << 3) | (((2) & 0x7) << (3 * 2)) | (((3) & 0x7) << (3 * 3)) | (1 << (3 * 4)))),
-                    Format = bufferDesc.Format,
+                    Format = textureDesc.Format,
                     Dimension = ShaderResourceViewDimension.Texture2D,
                     Texture2D =
                     {
-                                MipLevels = 1,
-                                MostDetailedMip = 0,
-                                PlaneSlice = 0,
-                                ResourceMinLODClamp = 0.0f
+                            MipLevels = 1,
+                            MostDetailedMip = 0,
+                            PlaneSlice = 0,
+                            ResourceMinLODClamp = 0.0f
                     }
                 },
-                shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + ViewStep);
+                shaderRenderViewHeap.CPUDescriptorHandleForHeapStart + ViewStep + (int)type * Engine.Instance.Core.Device.GetDescriptorHandleIncrementSize(DescriptorHeapType.ConstantBufferViewShaderResourceViewUnorderedAccessView));
         }
 
-        public int TextureCount { get; private set; }
+        public void SetColor(MaterialColor color)
+        {
+            Color = color;
+        }
+
+
+        public int TextureFlags { get; private set; }
+        public int ColorFlags { get; private set; }
         public int ViewStep { get; private set; }
         public string Name { get; private set; }
-        
-        private string[] TexturePath;
-        private MaterialLight Light;
+
+        private Dictionary<TextureType, string> TexturePath;
+        private Dictionary<TextureType, bool> HasTexture;
+        private MaterialColor Color;
     }
 
 }

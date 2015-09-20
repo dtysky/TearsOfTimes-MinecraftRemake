@@ -39,10 +39,9 @@ namespace Render
         public Vector4 Specular;
     }
 
-    public struct MaterialLight
+    public struct MaterialColor
     {
         public float Shininess;
-        public float ShininessStrength;
         public float Opacity; 
         public Vector4 Ambient;
         public Vector4 Diffuse;
@@ -50,6 +49,15 @@ namespace Render
         public Vector4 Reflective;
         public Vector4 Specular;
         public Vector4 Transparent;
+    }
+
+    public enum TextureType
+    {
+        Diffuse = 0,
+        Shadow = 1,
+        Normal = 2,
+        Gamma = 3,
+        Bump = 4
     }
 
     public class Light
