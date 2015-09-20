@@ -39,6 +39,19 @@ namespace Render
         public Vector4 Specular;
     }
 
+    public struct MaterialLight
+    {
+        public float Shininess;
+        public float ShininessStrength;
+        public float Opacity; 
+        public Vector4 Ambient;
+        public Vector4 Diffuse;
+        public Vector4 Emissive;
+        public Vector4 Reflective;
+        public Vector4 Specular;
+        public Vector4 Transparent;
+    }
+
     public class Light
     {
         public LightSource Type;

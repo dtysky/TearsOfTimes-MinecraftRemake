@@ -7,13 +7,8 @@ using System.Threading.Tasks;
 namespace Render.Core
 {
     using Assimp;
-    public class Model
+    class Mesh
     {
-        private Model()
-        {
-            Components = new List<ModelComponent>();
-        }
-
-
+        
     }
 }
